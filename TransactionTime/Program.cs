@@ -13,93 +13,128 @@ using Microsoft.Office.Interop.Excel;
 
 namespace TransactionTime
 {
-    public class TrainPair
-    {
-        public Train stoppedTrain;
-        public Train throughTrain;
-        public LoopLocation loopLocation;
-        public double stoppedLocation;
-        public double restartLocation;
+    ///// <summary>
+    ///// A class describing the pair of trains that interact in a conflict.
+    ///// Ie. one train stops and the other goes through.
+    ///// </summary>
+    //public class TrainPair
+    //{
+    //    public Train stoppedTrain;
+    //    public Train throughTrain;
+    //    public LoopLocation loopLocation;
+    //    public double stoppedLocation;
+    //    public double restartLocation;
 
-        public double timeForStoppedTrainToReachTrackSpeed;
-        public double simulatedTrainToReachTrackSpeedLocation;
-        public double timeBetweenClearingLoopAndRestart;
-        public double transactionTime;
+    //    public double timeForStoppedTrainToReachTrackSpeed;
+    //    public double simulatedTrainToReachTrackSpeedLocation;
+    //    public double timeBetweenClearingLoopAndRestart;
+    //    public double transactionTime;
 
+    //    /// <summary>
+    //    /// Default train pair constructor.
+    //    /// </summary>
+    //    public TrainPair()
+    //    {
+    //        this.stoppedTrain = null;
+    //        this.throughTrain = null;
+    //        this.loopLocation = null;
+    //        this.stoppedLocation = 0;
+    //        this.restartLocation = 0;
 
-        public TrainPair()
-        {
-            this.stoppedTrain = null;
-            this.throughTrain = null;
-            this.loopLocation = null;
-            this.stoppedLocation = 0;
-            this.restartLocation = 0;
+    //        this.timeForStoppedTrainToReachTrackSpeed = 0;
+    //        this.simulatedTrainToReachTrackSpeedLocation = 0;
+    //        this.timeBetweenClearingLoopAndRestart = 0;
+    //        this.transactionTime = 0;
+    //    }
 
-            this.timeForStoppedTrainToReachTrackSpeed = 0;
-            this.simulatedTrainToReachTrackSpeedLocation = 0;
-            this.timeBetweenClearingLoopAndRestart = 0;
-            this.transactionTime = 0;
-        }
+    //    /// <summary>
+    //    /// Train pair constructor for each conflit at a loop.
+    //    /// </summary>
+    //    /// <param name="stopped">The stopped trains.</param>
+    //    /// <param name="through">The train that continues through the loop.</param>
+    //    /// <param name="location">The location of the loop.</param>
+    //    /// <param name="stop">The kilometreage where the train stops.</param>
+    //    /// <param name="restart">The kilometreage where the train restarts.</param>
+    //    public TrainPair(Train stopped, Train through, LoopLocation location, double stop, double restart)
+    //    {
+    //        this.stoppedTrain = stopped;
+    //        this.throughTrain = through;
+    //        this.loopLocation = location;
+    //        this.stoppedLocation = stop;
+    //        this.restartLocation = restart;
 
-        public TrainPair(Train stopped, Train through, LoopLocation location, double stop, double restart)
-        {
-            this.stoppedTrain = stopped;
-            this.throughTrain = through;
-            this.loopLocation = location;
-            this.stoppedLocation = stop;
-            this.restartLocation = restart;
-
-            this.timeForStoppedTrainToReachTrackSpeed = 0;
-            this.simulatedTrainToReachTrackSpeedLocation = 0;
-            this.timeBetweenClearingLoopAndRestart = 0;
-            this.transactionTime = 0;
-        }
+    //        this.timeForStoppedTrainToReachTrackSpeed = 0;
+    //        this.simulatedTrainToReachTrackSpeedLocation = 0;
+    //        this.timeBetweenClearingLoopAndRestart = 0;
+    //        this.transactionTime = 0;
+    //    }
         
-        public Train matchToSimulation(List<Train> simulations)
-        {
-            foreach (Train train in simulations)
-            {
-                if (train.Category == Processing.convertTrainOperatorToCategory(this.stoppedTrain.trainOperator) &&
-                    train.trainDirection == this.stoppedTrain.trainDirection)
-                    return train;
-            }
+    //    /// <summary>
+    //    /// Function gets the corresponding simulation to the instance of the stoped train.
+    //    /// </summary>
+    //    /// <param name="simulations">A list of simulations</param>
+    //    /// <returns>The simulation that corresponds to the stopped train.</returns>
+    //    public Train matchToSimulation(List<Train> simulations)
+    //    {
+    //        /* Cycle through all the simulations */
+    //        foreach (Train train in simulations)
+    //        {
+    //            if (train.Category == Processing.convertTrainOperatorToCategory(this.stoppedTrain.trainOperator) &&
+    //                train.trainDirection == this.stoppedTrain.trainDirection)
+    //                return train;
+    //        }
 
-            /* This section should return an weighted average simualtion.
-             * The weighted average simualtion need to be added to the list prior to calling teh fucntion.
-             */
-            if (this.stoppedTrain.trainDirection == direction.IncreasingKm)
-                return simulations[0];
-            else
-                return simulations[1];
+    //        /* This section should return an weighted average simualtion.
+    //         * The weighted average simualtion need to be added to the list prior to calling the fucntion.
+    //         */
+    //        if (this.stoppedTrain.trainDirection == direction.IncreasingKm)
+    //            return simulations[0];
+    //        else
+    //            return simulations[1];
 
-        }
+    //    }
 
-    }
+    //}
 
-    public class LoopLocation
-    {
-        public double loopStart;
-        public double loopEnd;
+    ///// <summary>
+    ///// A class defining the loop location by kilometreage.
+    ///// </summary>
+    //public class LoopLocation
+    //{
+    //    public double loopStart;
+    //    public double loopEnd;
 
-        public LoopLocation()
-        {
-            this.loopStart = 0;
-            this.loopEnd = 1;
-        }
+    //    /// <summary>
+    //    /// Default loop location constructor
+    //    /// </summary>
+    //    public LoopLocation()
+    //    {
+    //        this.loopStart = 0;
+    //        this.loopEnd = 1;
+    //    }
 
-        public LoopLocation(LoopLocation location)
-        {
-            this.loopStart = location.loopStart;
-            this.loopEnd = location.loopEnd;
-        }
+    //    /// <summary>
+    //    /// Loop location constructor
+    //    /// </summary>
+    //    /// <param name="location">A loop location object.</param>
+    //    public LoopLocation(LoopLocation location)
+    //    {
+    //        this.loopStart = location.loopStart;
+    //        this.loopEnd = location.loopEnd;
+    //    }
 
-        public LoopLocation(double start, double end)
-        {
-            this.loopStart = start;
-            this.loopEnd = end;
-        }
+    //    /// <summary>
+    //    /// Loop location constructor
+    //    /// </summary>
+    //    /// <param name="start">The smallest kilometreage of the loop ends.</param>
+    //    /// <param name="end">The largest kilometreage of the loop ends.</param>
+    //    public LoopLocation(double start, double end)
+    //    {
+    //        this.loopStart = start;
+    //        this.loopEnd = end;
+    //    }
 
-    }
+    //}
 
 
 
@@ -232,17 +267,23 @@ namespace TransactionTime
             trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainDirection).ThenBy(t => t.stoppedTrain.trainID).ToList();
             /* Calculate the transaction time and the times contributing to it and populate the train pair parameters. */
             trainPairs = calculateTransactionTime(trainPairs, interpolatedSimulations, maxDistanceToTrackSpeed, trackSpeedFactor, interpolationInterval, trainLength);
-            
+                        
+            /* Generate the statistics for the list of train pairs in each loop */
+            List<TrainPairStatistics> stats = new List<TrainPairStatistics>();
+            foreach (LoopLocation loop in loopLocations)
+            { 
+                /* Extract the relavant train pairs that are associated to the current loop. */
+                List<TrainPair> pairs = trainPairs.Where(p => p.loopLocation == loop).ToList();
+                if (pairs.Count > 0)
+                    stats.Add(TrainPairStatistics.generateStats(pairs));
+            }
+            stats.Add(TrainPairStatistics.generateStats(trainPairs));
+            stats[stats.Count()-1].Category = "All loops";
+
             /* Write the train pairs to file grouped by loop location. */
-            writeTrainPairs(trainPairs, loopLocations, aggregatedDestination);
-
-            //calculate average transaction time by loop and overall
-
-
-
-
-
-
+            FileOperations.writeTrainPairs(trainPairs, loopLocations, aggregatedDestination);
+            FileOperations.wrtieTrainPairStatistics(stats, aggregatedDestination);
+           
 
         }
 
@@ -529,188 +570,6 @@ namespace TransactionTime
             return new List<double>(new double[] { timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop, distanceToTrackSpeed });
         }
 
-        /// <summary>
-        /// Write the train pairs data to file. The train speed and timing at each point will be 
-        /// displayed for future analysis and investigation.
-        /// </summary>
-        /// <param name="pair">A list of train pairs.</param>
-        /// <param name="loopLocations">A list of loop locations.</param>
-        /// <param name="aggregatedDestination">The destination directory.</param>
-        public static void writeTrainPairs(List<TrainPair> pair, List<LoopLocation> loopLocations, string aggregatedDestination)
-        {
-
-            /* Create the microsfot excel references. */
-            Application excel = new Application();
-            excel.Visible = false;
-            Workbook workbook = excel.Workbooks.Add(Type.Missing);
-            Worksheet worksheet;
-
-            /* Create the header details. */
-            string[,] headerString = {{ "km", "", "Trains:" },
-                                     { "", "Train ID:", "" },
-                                     { "", "Loco ID:", "" },
-                                     { "", "Train Operator:", "" },
-                                     { "", "Date:", "" },
-                                     { "", "Direction:", "" },
-                                     { "", "", "" },
-                                     { "","Time for stopped train to reach track speed", "" },
-                                     { "","Simulated train to reach track speed location", "" },
-                                     { "","Time between clearing loop and restarting", "" },
-                                     { "","Transaction time", "" }};
-            /* Set display offset parameters. */
-            int headerRows = headerString.GetLength(0);
-            int headerColumns = headerString.GetLength(1);
-
-            int headerOffset = headerRows+2;
-            int horizontalOffset = 3;
-
-            int displayRow = headerOffset + pair[0].stoppedTrain.journey.Count() - 1;
-
-            int timeOffset = 5;
-            int timedataOffset = displayRow + timeOffset;
-            
-            /* Index offset for the train pairs. */
-            int pairCount = 0;
-
-            /* Loop through each loop location, diaplaying all train pairs associated with each loop on seperate worksheets. */
-            for (int tabIdx = 0; tabIdx < loopLocations.Count(); tabIdx++)
-            {
-                /* Determine the number of train pairs stopping at each loop. */
-                int numberOfPairsAtLoop = pair.Where(p => p.loopLocation == loopLocations[tabIdx]).Count();
-                
-                /* If a train stops at the loop. dispaly it. */
-                if (numberOfPairsAtLoop > 0)
-                {
-                    int displayColumn = horizontalOffset + numberOfPairsAtLoop*2 - 1;
-                    
-                    /* Set the worksheet, and rename it according to the loop location. */
-                    worksheet = workbook.Sheets.Add(Type.Missing, Type.Missing, 1, Type.Missing) as Worksheet;
-                    worksheet.Name = string.Format("Loop {0:0.00} km - {1:0.00} km", loopLocations[tabIdx].loopStart, loopLocations[tabIdx].loopEnd);
-                    /* Display the header on each worksheet. */
-                    Range topLeft = worksheet.Cells[1, 1];
-                    Range bottomRight = worksheet.Cells[headerRows, headerColumns];
-                    worksheet.get_Range(topLeft, bottomRight).Value2 = headerString;
-
-                    /* Deconstruct the train details into excel columns. */
-                    string[,] TrainID = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] LocoID = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] trainOperator = new string[1, numberOfPairsAtLoop * 2];
-                    double[,] powerToWeight = new double[1, numberOfPairsAtLoop * 2];
-                    string[,] commodity = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] direction = new string[1, numberOfPairsAtLoop * 2];
-                    DateTime[,] trainDate = new DateTime[1, numberOfPairsAtLoop * 2];
-                    /* The transit time paramters. */
-                    string[,] timeForStoppedTrainToReachTrackSpeed = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] simulatedTrainToReachTrackSpeedLocation = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] timeBetweenClearingLoopAndRestart = new string[1, numberOfPairsAtLoop * 2];
-                    string[,] transactionTime = new string[1, numberOfPairsAtLoop * 2];
-
-                    double[,] kilometerage = new double[pair[0].stoppedTrain.journey.Count(), 1];
-                    string[,] loop = new string[pair[0].stoppedTrain.journey.Count(), 1];
-                    
-                    double[,] speed = new double[pair[0].stoppedTrain.journey.Count(), numberOfPairsAtLoop * 2];
-                    DateTime[,] dateTime = new DateTime[pair[0].stoppedTrain.journey.Count(), numberOfPairsAtLoop * 2];
-
-                    /* Loop through the train pairs at each loop. */
-                    for (int pairIdx = 0; pairIdx < numberOfPairsAtLoop; pairIdx++)
-                    {
-                        /* Account for the offset of each displaying loop location on seperate worksheets. */
-                        int stoppedIdx = pairIdx * 2;
-                        int throughIdx = pairIdx * 2 + 1;
-                        int pairListIdx = pairCount + pairIdx;
-
-                        /* Populate the stoppping train parameters. */
-                        TrainID[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.trainID;
-                        LocoID[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.locoID;
-                        trainOperator[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.trainOperator.ToString();
-                        trainDate[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.journey[0].dateTime;
-                        powerToWeight[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.powerToWeight;
-                        commodity[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.commodity.ToString();
-                        direction[0, stoppedIdx] = pair[pairListIdx].stoppedTrain.trainDirection.ToString();
-
-                        /* Populate the transaction time parameters. */
-                        timeForStoppedTrainToReachTrackSpeed[0, stoppedIdx] = string.Format("{0:0.000}", pair[pairListIdx].timeForStoppedTrainToReachTrackSpeed);
-                        simulatedTrainToReachTrackSpeedLocation[0, stoppedIdx] = string.Format("{0:0.000}", pair[pairListIdx].simulatedTrainToReachTrackSpeedLocation);
-                        timeBetweenClearingLoopAndRestart[0, stoppedIdx] = string.Format("{0:0.000}", pair[pairListIdx].timeBetweenClearingLoopAndRestart);
-                        transactionTime[0, stoppedIdx] = string.Format("{0:0.000}", pair[pairListIdx].transactionTime);
-
-                        /* Populate the through train parameters. */
-                        TrainID[0, throughIdx] = pair[pairListIdx].throughTrain.trainID;
-                        LocoID[0, throughIdx] = pair[pairListIdx].throughTrain.locoID;
-                        trainOperator[0, throughIdx] = pair[pairListIdx].throughTrain.trainOperator.ToString();
-                        trainDate[0, throughIdx] = pair[pairListIdx].throughTrain.journey[0].dateTime;
-                        powerToWeight[0, throughIdx] = pair[pairListIdx].throughTrain.powerToWeight;
-                        commodity[0, throughIdx] = pair[pairListIdx].throughTrain.commodity.ToString();
-                        direction[0, throughIdx] = pair[pairListIdx].throughTrain.trainDirection.ToString();
-
-                        timeForStoppedTrainToReachTrackSpeed[0, throughIdx] = "";
-                        simulatedTrainToReachTrackSpeedLocation[0, throughIdx] = "";
-                        timeBetweenClearingLoopAndRestart[0, throughIdx] = "";
-                        transactionTime[0, throughIdx] = "";
-                        
-                        /* Loop through the train journies. */
-                        for (int journeyIdx = 0; journeyIdx < pair[0].stoppedTrain.journey.Count(); journeyIdx++)
-                        {
-                            /* Populate the kilometerage. */
-                            kilometerage[journeyIdx, 0] = pair[0].stoppedTrain.journey[journeyIdx].kilometreage;
-                            if (pair[0].stoppedTrain.journey[journeyIdx].isLoopHere)
-                                loop[journeyIdx, 0] = "loop";
-                            else
-                                loop[journeyIdx, 0] = "";
-
-                            /* Populate the speed and times for both the stopping train and the through train. */
-                            speed[journeyIdx, stoppedIdx] = pair[pairListIdx].stoppedTrain.journey[journeyIdx].speed;
-                            speed[journeyIdx, throughIdx] = pair[pairListIdx].throughTrain.journey[journeyIdx].speed;
-
-                            dateTime[journeyIdx, stoppedIdx] = pair[pairListIdx].stoppedTrain.journey[journeyIdx].dateTime;
-                            dateTime[journeyIdx, throughIdx] = pair[pairListIdx].throughTrain.journey[journeyIdx].dateTime;                 
-                        }
-                    }
-                    /* Increment the train pair offset. */
-                    pairCount += numberOfPairsAtLoop;
-
-                    /* Write the data to the active excel worksheet. */
-                    worksheet.Range[worksheet.Cells[2, 3], worksheet.Cells[2, numberOfPairsAtLoop * 2 + 2]].Value2 = TrainID;
-                    worksheet.Range[worksheet.Cells[3, 3], worksheet.Cells[3, numberOfPairsAtLoop * 2 + 2]].Value2 = LocoID;
-                    worksheet.Range[worksheet.Cells[4, 3], worksheet.Cells[4, numberOfPairsAtLoop * 2 + 2]].Value2 = trainOperator;
-                    worksheet.Range[worksheet.Cells[5, 3], worksheet.Cells[5, numberOfPairsAtLoop * 2 + 2]].Value2 = trainDate;
-                    worksheet.Range[worksheet.Cells[6, 3], worksheet.Cells[6, numberOfPairsAtLoop * 2 + 2]].Value2 = direction;
-                    //worksheet.Range[worksheet.Cells[7, 3], worksheet.Cells[7, numberOfPairsAtLoop * 2 + 2]].Value2 = commodity;
-
-                    worksheet.Range[worksheet.Cells[8, 3], worksheet.Cells[8, numberOfPairsAtLoop * 2 + 2]].Value2 = timeForStoppedTrainToReachTrackSpeed;
-                    worksheet.Range[worksheet.Cells[9, 3], worksheet.Cells[9, numberOfPairsAtLoop * 2 + 2]].Value2 = simulatedTrainToReachTrackSpeedLocation;
-                    worksheet.Range[worksheet.Cells[10, 3], worksheet.Cells[10, numberOfPairsAtLoop * 2 + 2]].Value2 = timeBetweenClearingLoopAndRestart;
-                    worksheet.Range[worksheet.Cells[11, 3], worksheet.Cells[11, numberOfPairsAtLoop * 2 + 2]].Value2 = transactionTime;
-
-                    /* Speed data */
-                    worksheet.Range[worksheet.Cells[headerOffset, 1], worksheet.Cells[displayRow, 1]].Value2 = kilometerage;
-                    worksheet.Range[worksheet.Cells[headerOffset, 2], worksheet.Cells[displayRow, 2]].Value2 = loop;
-                    worksheet.Range[worksheet.Cells[headerOffset, horizontalOffset], worksheet.Cells[displayRow, displayColumn]].Value2 = speed;
-                    /* Time data */
-                    worksheet.Range[worksheet.Cells[timedataOffset, 1], worksheet.Cells[timedataOffset + pair[0].stoppedTrain.journey.Count() - 1, 1]].Value2 = kilometerage;
-                    worksheet.Range[worksheet.Cells[timedataOffset, 2], worksheet.Cells[timedataOffset + pair[0].stoppedTrain.journey.Count() - 1, 2]].Value2 = loop;
-                    worksheet.Range[worksheet.Cells[timedataOffset, horizontalOffset], worksheet.Cells[timedataOffset + pair[0].stoppedTrain.journey.Count() - 1, displayColumn]].Value2 = dateTime;
-                }
-
-
-            }
-
-            string saveFilename = aggregatedDestination + @"\TransactionTime_TrainPairs" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
-            /* Check the file does not exist yet. */
-            if (File.Exists(saveFilename))
-            {
-                //isFileOpen(saveFilename);
-                File.Delete(saveFilename);
-            }
-
-            /* Save the workbook and close the excel application. */
-            workbook.SaveAs(saveFilename, XlFileFormat.xlOpenXMLWorkbook,Type.Missing, Type.Missing, Type.Missing, Type.Missing,
-                XlSaveAsAccessMode.xlNoChange,Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
-
-            workbook.Close(Type.Missing, Type.Missing, Type.Missing);
-            excel.UserControl = true;
-            excel.Quit();
-
-        }
+        
     }
 }
