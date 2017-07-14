@@ -13,131 +13,6 @@ using Microsoft.Office.Interop.Excel;
 
 namespace TransactionTime
 {
-    ///// <summary>
-    ///// A class describing the pair of trains that interact in a conflict.
-    ///// Ie. one train stops and the other goes through.
-    ///// </summary>
-    //public class TrainPair
-    //{
-    //    public Train stoppedTrain;
-    //    public Train throughTrain;
-    //    public LoopLocation loopLocation;
-    //    public double stoppedLocation;
-    //    public double restartLocation;
-
-    //    public double timeForStoppedTrainToReachTrackSpeed;
-    //    public double simulatedTrainToReachTrackSpeedLocation;
-    //    public double timeBetweenClearingLoopAndRestart;
-    //    public double transactionTime;
-
-    //    /// <summary>
-    //    /// Default train pair constructor.
-    //    /// </summary>
-    //    public TrainPair()
-    //    {
-    //        this.stoppedTrain = null;
-    //        this.throughTrain = null;
-    //        this.loopLocation = null;
-    //        this.stoppedLocation = 0;
-    //        this.restartLocation = 0;
-
-    //        this.timeForStoppedTrainToReachTrackSpeed = 0;
-    //        this.simulatedTrainToReachTrackSpeedLocation = 0;
-    //        this.timeBetweenClearingLoopAndRestart = 0;
-    //        this.transactionTime = 0;
-    //    }
-
-    //    /// <summary>
-    //    /// Train pair constructor for each conflit at a loop.
-    //    /// </summary>
-    //    /// <param name="stopped">The stopped trains.</param>
-    //    /// <param name="through">The train that continues through the loop.</param>
-    //    /// <param name="location">The location of the loop.</param>
-    //    /// <param name="stop">The kilometreage where the train stops.</param>
-    //    /// <param name="restart">The kilometreage where the train restarts.</param>
-    //    public TrainPair(Train stopped, Train through, LoopLocation location, double stop, double restart)
-    //    {
-    //        this.stoppedTrain = stopped;
-    //        this.throughTrain = through;
-    //        this.loopLocation = location;
-    //        this.stoppedLocation = stop;
-    //        this.restartLocation = restart;
-
-    //        this.timeForStoppedTrainToReachTrackSpeed = 0;
-    //        this.simulatedTrainToReachTrackSpeedLocation = 0;
-    //        this.timeBetweenClearingLoopAndRestart = 0;
-    //        this.transactionTime = 0;
-    //    }
-        
-    //    /// <summary>
-    //    /// Function gets the corresponding simulation to the instance of the stoped train.
-    //    /// </summary>
-    //    /// <param name="simulations">A list of simulations</param>
-    //    /// <returns>The simulation that corresponds to the stopped train.</returns>
-    //    public Train matchToSimulation(List<Train> simulations)
-    //    {
-    //        /* Cycle through all the simulations */
-    //        foreach (Train train in simulations)
-    //        {
-    //            if (train.Category == Processing.convertTrainOperatorToCategory(this.stoppedTrain.trainOperator) &&
-    //                train.trainDirection == this.stoppedTrain.trainDirection)
-    //                return train;
-    //        }
-
-    //        /* This section should return an weighted average simualtion.
-    //         * The weighted average simualtion need to be added to the list prior to calling the fucntion.
-    //         */
-    //        if (this.stoppedTrain.trainDirection == direction.IncreasingKm)
-    //            return simulations[0];
-    //        else
-    //            return simulations[1];
-
-    //    }
-
-    //}
-
-    ///// <summary>
-    ///// A class defining the loop location by kilometreage.
-    ///// </summary>
-    //public class LoopLocation
-    //{
-    //    public double loopStart;
-    //    public double loopEnd;
-
-    //    /// <summary>
-    //    /// Default loop location constructor
-    //    /// </summary>
-    //    public LoopLocation()
-    //    {
-    //        this.loopStart = 0;
-    //        this.loopEnd = 1;
-    //    }
-
-    //    /// <summary>
-    //    /// Loop location constructor
-    //    /// </summary>
-    //    /// <param name="location">A loop location object.</param>
-    //    public LoopLocation(LoopLocation location)
-    //    {
-    //        this.loopStart = location.loopStart;
-    //        this.loopEnd = location.loopEnd;
-    //    }
-
-    //    /// <summary>
-    //    /// Loop location constructor
-    //    /// </summary>
-    //    /// <param name="start">The smallest kilometreage of the loop ends.</param>
-    //    /// <param name="end">The largest kilometreage of the loop ends.</param>
-    //    public LoopLocation(double start, double end)
-    //    {
-    //        this.loopStart = start;
-    //        this.loopEnd = end;
-    //    }
-
-    //}
-
-
-
 
     class Program
     {
@@ -163,8 +38,8 @@ namespace TransactionTime
             analysisCategory analysisCategory = analysisCategory.TrainOperator;
 
             DateTime[] dateRange = new DateTime[2];
-            dateRange[0] = new DateTime(2017,1,5);
-            dateRange[1] = new DateTime(2017,1,10);
+            dateRange[0] = new DateTime(2017,1,1);
+            dateRange[1] = new DateTime(2017,7,1);
 
             double startInterpolationKm = 264;
             double endInterpolationKm = 541;
