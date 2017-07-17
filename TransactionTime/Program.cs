@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//using System.Timers;
 
 using System.IO;
 using TrainLibrary;
 using Statistics;
 using IOLibrary;
-
-using Microsoft.Office.Interop.Excel;
 
 namespace TransactionTime
 {
@@ -50,12 +50,15 @@ namespace TransactionTime
 
             double trainLength = 1.5;
             double trackSpeedFactor = 0.9;
-            double maxDistanceToTrackSpeed = 7;
+            double maxDistanceToTrackSpeed = 5;
             double timeThreshold = 10;
             double stoppingSpeedThreshold = 5;
             double restartSpeedThreshold = 10;
 
             /************************************ Form parameters ********************************************************/
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             /* Ensure there is a empty list of trains to exclude to start. */
             List<string> excludeTrainList = new List<string> { };
@@ -158,7 +161,11 @@ namespace TransactionTime
             /* Write the train pairs to file grouped by loop location. */
             FileOperations.writeTrainPairs(trainPairs, loopLocations, aggregatedDestination);
             FileOperations.wrtieTrainPairStatistics(stats, aggregatedDestination);
-           
+
+            stopwatch.Stop();
+            TimeSpan timer = stopwatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}", timer.Hours, timer.Minutes, timer.Seconds);
+            Console.WriteLine("RunTime " + elapsedTime);
 
         }
 
@@ -323,7 +330,8 @@ namespace TransactionTime
             double timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop;
             double transactionTime = 0;
             double distanceToTrackSpeed = 0;
-                
+            int a = 0;
+
             /* Cycle through each train pair. */
             foreach (TrainPair pair in trainPairs)
             {
@@ -332,6 +340,10 @@ namespace TransactionTime
                 timeToClearLoop = 0;
                 transactionTime = 0;
                 distanceToTrackSpeed = 0;
+
+                if (pair.stoppedTrain.trainID.Equals("MB911"))
+                    a = 1;
+
 
                 /* Extract the appropriate simulation for comparison. */
                 simulation = pair.matchToSimulation(interpolatedSimulations);
@@ -346,15 +358,16 @@ namespace TransactionTime
                 timeToClearLoop = transactionTimeComponents[2];
                 /* Extract the required distance to reach track speed. */
                 distanceToTrackSpeed = transactionTimeComponents[3];
+                                
+                /* Calculate the transaction time. */
+                transactionTime = timeToReachTrackSpeed - simulatedTrainTime + timeToClearLoop;
 
                 /* Identify the pairs that should be kept based on the distance required to achieve 
                  * track speed and positive time components. 
                  */
-                if (timeToReachTrackSpeed > 0 && simulatedTrainTime > 0 && timeToClearLoop > 0 && distanceToTrackSpeed < maxDistanceToTrackSpeed)
+                if (timeToReachTrackSpeed > 0 && simulatedTrainTime > 0 && timeToClearLoop > 0 && transactionTime > 0 &&
+                    distanceToTrackSpeed < maxDistanceToTrackSpeed)
                     keepIdx.Add(trainPairs.IndexOf(pair));
-
-                /* Calculate the transaction time. */
-                transactionTime = timeToReachTrackSpeed - simulatedTrainTime + timeToClearLoop;
 
                 /* Populate the transaction time and its componenets for each train pair. */
                 pair.timeForStoppedTrainToReachTrackSpeed = timeToReachTrackSpeed;
@@ -362,7 +375,7 @@ namespace TransactionTime
                 pair.timeBetweenClearingLoopAndRestart = timeToClearLoop;
                 pair.transactionTime = transactionTime;
 
-
+                Console.WriteLine("{0}; {1:0.000} min; {2:0.00} km",pair.stoppedTrain.trainID,pair.timeForStoppedTrainToReachTrackSpeed,distanceToTrackSpeed);
             }
 
             /* Select only the train pairs that are valid. */
@@ -396,30 +409,41 @@ namespace TransactionTime
             
             int increment = 0;
             double loopSide = 0;
+            int trackSpeedLocationIdx = 0;
+            int restartidx = 0;
 
-            /* Define the changinf parameters based on the direction of the stopping train. */
+            /* Define the changing parameters based on the direction of the stopping train. */
             if (pair.stoppedTrain.trainDirection == direction.IncreasingKm)
             {
                 increment = 1;
                 loopSide = pair.loopLocation.loopEnd;
+                
+                trackSpeedLocationIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == loopSide) + increment * 2;
+                restartidx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
+
+                /* Get the index for the latest of the restart time and the loop end. */
+                trackSpeedLocationIdx = Math.Max(trackSpeedLocationIdx, restartidx);
             }
             else
             {
-                loopSide = pair.loopLocation.loopStart;
                 increment = -1;
+                loopSide = pair.loopLocation.loopStart;
+                
+                trackSpeedLocationIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == loopSide) + increment * 2;
+                restartidx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
+
+                /* Get the index for the latest of the restart time and the loop end. */
+                trackSpeedLocationIdx = Math.Min(trackSpeedLocationIdx, restartidx);
             }
             
-            /* Identify the index where the stopped train stops. */
-            int trackSpeedLocationIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == loopSide) + increment;
-            
             /* find the location where the train reaches 90% of simulated train speed. */    
-            while (distanceToTrackSpeed < maxDistanceToTrackSpeed && pair.stoppedTrain.journey[trackSpeedLocationIdx].speed < trackSpeedFactor * simulation.journey[trackSpeedLocationIdx].speed)
+            while (pair.stoppedTrain.journey[trackSpeedLocationIdx].speed < trackSpeedFactor * simulation.journey[trackSpeedLocationIdx].speed)
             {
                 /* Increment the distance travelled, and the time for the stopped train and the simulation to reach the track speed location. */
                 distanceToTrackSpeed += interpolationInterval * Processing.metresToKilometers;
                 timeToReachTrackSpeed += (pair.stoppedTrain.journey[trackSpeedLocationIdx].dateTime - pair.stoppedTrain.journey[trackSpeedLocationIdx - increment].dateTime).TotalMinutes;
                 simulatedTrainTime += (simulation.journey[trackSpeedLocationIdx].dateTime - simulation.journey[trackSpeedLocationIdx - increment].dateTime).TotalMinutes;
-                
+
                 /* Check we are not trying to continue outside the bounds of the train journey. */
                 if (trackSpeedLocationIdx == 1 || trackSpeedLocationIdx == pair.stoppedTrain.journey.Count() - 2)
                     break;
