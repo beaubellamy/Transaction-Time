@@ -55,6 +55,8 @@ namespace TransactionTime
             double stoppingSpeedThreshold = 5;
             double restartSpeedThreshold = 10;
 
+            double transactionTimeOutlierThreshold = 10;
+
             /************************************ Form parameters ********************************************************/
 
             Stopwatch stopwatch = new Stopwatch();
@@ -100,8 +102,6 @@ namespace TransactionTime
                 simulatedTrains.Add(FileOperations.readSimulationData(simulationFiles[index * 2 + 1], simCategories[index], direction.DecreasingKm));
             }
 
-            Console.WriteLine("Interpolating Simulation data.");
-
             /* Interpolate the simulations to the same granularity as the ICE data will be. */
             List<Train> interpolatedSimulations = new List<Train>();
             interpolatedSimulations = Processing.interpolateTrainData(simulatedTrains, trackGeometry, startInterpolationKm, endInterpolationKm, interpolationInterval);
@@ -110,13 +110,9 @@ namespace TransactionTime
             List<TrainRecord> OrderdTrainRecords = new List<TrainRecord>();
             OrderdTrainRecords = TrainRecords.OrderBy(t => t.trainID).ThenBy(t => t.locoID).ThenBy(t => t.dateTime).ThenBy(t => t.kmPost).ToList();
 
-            Console.WriteLine("Making trains. [" + OrderdTrainRecords.Count() + "]");
-
             List<Train> trainList = new List<Train>();
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, timethreshold, distanceThreshold, minimumJourneyDistance, analysisCategory);
             //trainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, timethreshold, distanceThreshold, minimumJourneyDistance, analysisCategory);
-
-            Console.WriteLine("Interpolating train data. [" + trainList.Count() + "]");
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
@@ -124,8 +120,6 @@ namespace TransactionTime
             interpolatedTrains = Processing.interpolateTrainData(trainList, trackGeometry, startInterpolationKm, endInterpolationKm, interpolationInterval);
 
             /**************************************************************************************************/
-
-            Console.WriteLine("Writing data to file.");
 
             /* Write the interpolated data to file. */
             FileOperations.writeTrainDataWithTime(interpolatedTrains, startInterpolationKm, interpolationInterval, aggregatedDestination);
@@ -145,7 +139,10 @@ namespace TransactionTime
             trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainDirection).ThenBy(t => t.stoppedTrain.trainID).ToList();
             /* Calculate the transaction time and the times contributing to it and populate the train pair parameters. */
             trainPairs = calculateTransactionTime(trainPairs, interpolatedSimulations, maxDistanceToTrackSpeed, trackSpeedFactor, interpolationInterval, trainLength);
-                        
+
+            /* Remove outliers [ie transaction time greater than transaction time outlier threshold (10 min)]*/
+            trainPairs = trainPairs.Where(p => p.transactionTime < transactionTimeOutlierThreshold).ToList();
+
             /* Generate the statistics for the list of train pairs in each loop */
             List<TrainPairStatistics> stats = new List<TrainPairStatistics>();
             foreach (LoopLocation loop in loopLocations)
@@ -330,8 +327,7 @@ namespace TransactionTime
             double timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop;
             double transactionTime = 0;
             double distanceToTrackSpeed = 0;
-            int a = 0;
-
+            
             /* Cycle through each train pair. */
             foreach (TrainPair pair in trainPairs)
             {
@@ -340,10 +336,6 @@ namespace TransactionTime
                 timeToClearLoop = 0;
                 transactionTime = 0;
                 distanceToTrackSpeed = 0;
-
-                if (pair.stoppedTrain.trainID.Equals("MB911"))
-                    a = 1;
-
 
                 /* Extract the appropriate simulation for comparison. */
                 simulation = pair.matchToSimulation(interpolatedSimulations);
@@ -371,16 +363,18 @@ namespace TransactionTime
 
                 /* Populate the transaction time and its componenets for each train pair. */
                 pair.timeForStoppedTrainToReachTrackSpeed = timeToReachTrackSpeed;
+                pair.distanceToTrackSpeed = distanceToTrackSpeed;
                 pair.simulatedTrainToReachTrackSpeedLocation = simulatedTrainTime;
                 pair.timeBetweenClearingLoopAndRestart = timeToClearLoop;
                 pair.transactionTime = transactionTime;
 
-                Console.WriteLine("{0}; {1:0.000} min; {2:0.00} km",pair.stoppedTrain.trainID,pair.timeForStoppedTrainToReachTrackSpeed,distanceToTrackSpeed);
+                
+                
             }
 
             /* Select only the train pairs that are valid. */
             trainPairs = keepIdx.Select(item => trainPairs[item]).ToList();
-
+            
             return trainPairs;
         }
 
@@ -410,7 +404,7 @@ namespace TransactionTime
             int increment = 0;
             double loopSide = 0;
             int trackSpeedLocationIdx = 0;
-            int restartidx = 0;
+            int restartIdx = 0;
 
             /* Define the changing parameters based on the direction of the stopping train. */
             if (pair.stoppedTrain.trainDirection == direction.IncreasingKm)
@@ -419,10 +413,10 @@ namespace TransactionTime
                 loopSide = pair.loopLocation.loopEnd;
                 
                 trackSpeedLocationIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == loopSide) + increment * 2;
-                restartidx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
+                restartIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
 
                 /* Get the index for the latest of the restart time and the loop end. */
-                trackSpeedLocationIdx = Math.Max(trackSpeedLocationIdx, restartidx);
+                trackSpeedLocationIdx = Math.Max(trackSpeedLocationIdx, restartIdx);
             }
             else
             {
@@ -430,10 +424,10 @@ namespace TransactionTime
                 loopSide = pair.loopLocation.loopStart;
                 
                 trackSpeedLocationIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == loopSide) + increment * 2;
-                restartidx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
+                restartIdx = pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation) + increment * 2;
 
                 /* Get the index for the latest of the restart time and the loop end. */
-                trackSpeedLocationIdx = Math.Min(trackSpeedLocationIdx, restartidx);
+                trackSpeedLocationIdx = Math.Min(trackSpeedLocationIdx, restartIdx);
             }
             
             /* find the location where the train reaches 90% of simulated train speed. */    
@@ -459,7 +453,7 @@ namespace TransactionTime
             simulatedTrainTime += (simulation.journey[trackSpeedLocationIdx].dateTime - simulation.journey[trackSpeedLocationIdx - increment].dateTime).TotalMinutes;
             
             /* Time when the stopped train restarts. */
-            restartTime = pair.stoppedTrain.journey[pair.stoppedTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation)].dateTime;
+            restartTime = pair.stoppedTrain.journey[restartIdx].dateTime;
             /* Time when the through train clears the loop. */
             clearanceTime = pair.throughTrain.journey[pair.throughTrain.journey.FindIndex(t => t.kilometreage >= loopSide - increment * trainLength)].dateTime;
             /* Calculate the time between the through train clearing the loop and the stopped train to restart. */
