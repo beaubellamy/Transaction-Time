@@ -68,8 +68,8 @@ namespace TransactionTime
             OrderdTrainRecords = TrainRecords.OrderBy(t => t.trainID).ThenBy(t => t.locoID).ThenBy(t => t.dateTime).ThenBy(t => t.kmPost).ToList();
 
             List<Train> trainList = new List<Train>();
-            //trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-            trainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
+            trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
+            //trainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
 
             int increasingTrains = trainList.Where(t => t.trainDirection == direction.IncreasingKm).Count();
             int decreasingTrains = trainList.Where(t => t.trainDirection == direction.DecreasingKm).Count();
@@ -265,7 +265,7 @@ namespace TransactionTime
                             /* Ensure the train is going in the opposite direction to the stopped train. */
                             if (throughTrain.trainDirection != pair.stoppedTrain.trainDirection) // may need to check not "invalid, or unknown"
                             {
-                                /* calcualte teh time differance of each train at the restart location. */
+                                /* calcualte the time difference of each train at the restart location. */
                                 double timeDifference = (pair.stoppedTrain.journey[idx].dateTime - throughTrain.journey[idx].dateTime).TotalMinutes;
 
                                 /* Im concerned that this may capture additonal trains, but its unlikely that there will be 
