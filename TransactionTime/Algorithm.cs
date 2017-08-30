@@ -5,9 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using System.IO;
-using Microsoft.Office.Interop.Excel;
-
+/* Custom libaries */
 using TrainLibrary;
 using IOLibrary;
 using Statistics;
@@ -16,7 +14,12 @@ namespace TransactionTime
 {
     class Algorithm
     {
+        /* The minimum gap in time between points to indicate a large gap when a train is restarting. */
+        private static double fineTuneTimeGap_sec = 30;
 
+        /// <summary>
+        /// Calaculate the transaction time for each opposing cross encountered by trains in the supplied region.
+        /// </summary>
         public static void transactionTime()
         {
                         
@@ -69,54 +72,41 @@ namespace TransactionTime
 
             List<Train> trainList = new List<Train>();
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-            //trainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-
+            
             int increasingTrains = trainList.Where(t => t.trainDirection == direction.IncreasingKm).Count();
             int decreasingTrains = trainList.Where(t => t.trainDirection == direction.DecreasingKm).Count();
-
-            Console.WriteLine("MakeTrains:: Operators: {0}; increasing trains: {1}; decreasing trains: {2}",numberOfOperators,increasingTrains,decreasingTrains);
-            foreach(trainOperator Operator in operators)
-            {
-                Console.WriteLine("{0}: [{1}]", Operator.ToString(), trainList.Where(t => t.trainOperator == Operator).Count());
-            }
-
+            
             FileOperations.writeRawTrainDataWithTime(trainList, Settings.aggregatedDestination);
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
             List<Train> interpolatedTrains = new List<Train>();
-            interpolatedTrains = Processing.interpolateTrainData(trainList, trackGeometry, Settings.startInterpolationKm, Settings.endInterpolationKm, Settings.interpolationInterval);
-
+            interpolatedTrains = Processing.interpolateTrainDataWithGaps(trainList, trackGeometry, Settings.startInterpolationKm, Settings.endInterpolationKm, Settings.interpolationInterval);
+            
             /**************************************************************************************************/
             
             /* Write the interpolated data to file. */
-            //FileOperations.writeTrainDataWithTime(interpolatedTrains, Settings.startInterpolationKm, Settings.interpolationInterval, Settings.aggregatedDestination);
-            FileOperations.writeTrainDataWithTime(trainList, Settings.startInterpolationKm, Settings.interpolationInterval, Settings.aggregatedDestination);
-
+            FileOperations.writeTrainDataWithTime(interpolatedTrains, Settings.startInterpolationKm, Settings.interpolationInterval, Settings.aggregatedDestination);
+            
             /* Identify all the potential loop locations where a train may be forced to stop. */
             List<LoopLocation> loopLocations = findAllLoopLocations(interpolatedTrains[0], Settings.endInterpolationKm);
 
             /* Identify all the trains that stop at a loop. */
             List<TrainPair> trainPairs = findAllStoppingTrains(interpolatedTrains, loopLocations, Settings.stoppingSpeedThreshold, Settings.restartSpeedThreshold);
-            Console.WriteLine("Number of stoppping trains: {0}",trainPairs.Count());
-
+            
             /* Identify the corresponding through trains for the trains that have stopped.  */
             populateThroughTrains(trainPairs, loopLocations, interpolatedTrains, Settings.throughTrainTime);
 
             /* Ignore the train pairs where we do not have an identified through train. */
             trainPairs = trainPairs.Where(p => p.throughTrain != null).ToList();
-            Console.WriteLine("Number of train pairs: {0}", trainPairs.Count());
-
+            
             /* Order the remaining pairs by loop location, stopping train direction and ID. */
             trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainDirection).ThenBy(t => t.stoppedTrain.trainID).ToList();
-            /* Calculate the transaction time and the times contributing to it and populate the train pair parameters. */
             trainPairs = calculateTransactionTime(trainPairs, interpolatedSimulations, Settings.maxDistanceToTrackSpeed, Settings.trackSpeedFactor, Settings.interpolationInterval, Settings.trainLength);
-            Console.WriteLine("After calculations: {0}", trainPairs.Count());
-
+            
             /* Remove outliers [ie transaction time greater than transaction time outlier threshold (10 min)]*/
             trainPairs = trainPairs.Where(p => p.transactionTime < Settings.transactionTimeOutlierThreshold).ToList();
-            Console.WriteLine("After outlier removal: {0}", trainPairs.Count());
-
+            
             /* Generate the statistics for the list of train pairs in each loop */
             List<TrainPairStatistics> stats = new List<TrainPairStatistics>();
             foreach (LoopLocation loop in loopLocations)
@@ -132,11 +122,10 @@ namespace TransactionTime
             /* Write the train pairs to file grouped by loop location. */
             FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
             FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
-
+                       
 
         }
-
-        
+                
         /// <summary>
         /// Find the locations of all loops
         /// </summary>
@@ -154,7 +143,7 @@ namespace TransactionTime
 
             for (int index = 0; index < journey.Count(); index++)
             {
-
+                /* Find the start of the loop */
                 if (!startLoopFound && journey[index].isLoopHere)
                 {
                     /* If the start of the loop is found, set the start parameter. */
@@ -170,6 +159,7 @@ namespace TransactionTime
                     end = journey[index - 1].kilometreage;
 
                     /* Create a loop location if its not too close to the end of the data. */
+                    // 30 km prior to the end of the interpolation to allw the through trains to be found.
                     if (end < endInterpolationKm - 30)
                         loopLocations.Add(new LoopLocation(start, end));
 
@@ -191,8 +181,10 @@ namespace TransactionTime
         /// <returns>A list of train pairs that do not have the through trains identified.</returns>
         public static List<TrainPair> findAllStoppingTrains(List<Train> trains, List<LoopLocation> loopLocations, double stoppingSpeedThreshold, double restartSpeedThreshold)
         {
-
+            /* Set the minimum speed. */
             double minSpeed = double.MinValue;
+            List<TrainJourney> speeds = new List<TrainJourney>();
+            /* Create a list of pairs to store the stopped trains and the details of the cross. */
             List<TrainPair> trainPairs = new List<TrainPair>();
 
             /* loop through the trains to find the trains that stop in loops. */
@@ -203,9 +195,16 @@ namespace TransactionTime
                 {
 
                     /* Find the minimum speed within the loop. */
-                    minSpeed = train.journey.Where(t => t.kilometreage >= loopLocations[loopIdx].loopStart).
-                                                    Where(t => t.kilometreage <= loopLocations[loopIdx].loopEnd).Min(t => t.speed);
-
+                    speeds = train.journey.Where(t => t.interpolate == true).
+                                Where(t => t.kilometreage >= loopLocations[loopIdx].loopStart).
+                                Where(t => t.kilometreage <= loopLocations[loopIdx].loopEnd).ToList();
+                    /* Determine the minimum speed of the train journey items within the boundaries of the loop. */
+                    if (speeds.Count() > 0)
+                        minSpeed = speeds.Min(t => t.speed);
+                    else
+                        /* Default minimum speed. */
+                        minSpeed = 0;
+                    
                     /* If the minimm speed is below the threshold, it is considered to be stopping within the loop. */
                     if (minSpeed > 0 && minSpeed < stoppingSpeedThreshold)
                     {
@@ -220,22 +219,64 @@ namespace TransactionTime
                             restartIdx = train.journey.FindIndex(stopIdx, t => t.speed >= restartSpeedThreshold);
                         else
                             restartIdx = train.journey.FindLastIndex(stopIdx, stopIdx - 1, t => t.speed >= restartSpeedThreshold);
-
+    
                         /* Add the stopped train parameters to the list. */
                         if (stopIdx > 0 && restartIdx > 0)
+                        {
+                            /* Fine tune the restart locaton. */
+                            restartIdx = fineTuneRestart(train.journey, restartIdx, train.trainDirection);
+                            /* Add the stopped train and cross details to the list. */
                             trainPairs.Add(new TrainPair(train, null, loopLocations[loopIdx], train.journey[stopIdx].kilometreage, train.journey[restartIdx].kilometreage));
-
+                        }
                     }
-
-
 
                 }
 
-
-
             }
+            /* Sort the train pairs in order of loops */
+            trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainID).ToList();
+
             return trainPairs;
 
+        }
+
+        /// <summary>
+        /// Fine tune the stopped train restart location.
+        /// </summary>
+        /// <param name="journey">The train journey details.</param>
+        /// <param name="index">The initial restart index.</param>
+        /// <param name="direction">The train direction.</param>
+        /// <returns>A new index for the restart location.</returns>
+        private static int fineTuneRestart(List<TrainJourney> journey, int index, direction direction)
+        {
+            /* Define evaluation variables. */
+            double timeDiff = 0;
+            int increment = 1;
+            int restartIndex = index;
+
+            /*  Determine the increment value based on the train direction. */
+            if (direction == direction.DecreasingKm)
+                increment = -1;
+                            
+            /* Fine tune the restart location by looking up to two point ahead for a large time difference. */
+            timeDiff = (journey[index + increment].dateTime - journey[index].dateTime).TotalSeconds;
+
+            /* A time gap of greater than 30 seconds is considered large. */
+            /* It takes 36 sec for a train travelling at 5 kph to travel a distance of 50m. 
+             * So a gap of less than 30 sec, the train will be travelling faster than 5 kph. 
+             */
+            if (timeDiff > fineTuneTimeGap_sec)
+            {
+                restartIndex = index + increment;
+
+                timeDiff = (journey[index + 2 * increment].dateTime - journey[index + increment].dateTime).TotalSeconds;
+                /* Check the next point ahead for a large gap in time. */
+                if (timeDiff > fineTuneTimeGap_sec)
+                    restartIndex = index + 2 * increment;
+            }
+
+            return restartIndex;
+          
         }
 
         /// <summary>
@@ -247,40 +288,47 @@ namespace TransactionTime
         /// <param name="timeThreshold">The maximum time difference between the stopped train and the through train.</param>
         public static void populateThroughTrains(List<TrainPair> trainPairs, List<LoopLocation> loopLocations, List<Train> trains, double timeThreshold)
         {
-            /* Cycle through the train pairs. */
-            foreach (TrainPair pair in trainPairs)
+            double minDifference = double.MaxValue;
+            Train keepThrough = new Train();
+
+            /* Search through each loop location. */
+            foreach (LoopLocation loop in loopLocations)
             {
-                /* Search through each loop location. */
-                foreach (LoopLocation loop in loopLocations)
+                /* Cycle through the train pairs. */
+                foreach (TrainPair pair in trainPairs)
                 {
                     /* If the current train pair stopped at the current loop, search for the through train. */
                     if (pair.loopLocation == loop)
                     {
+                        minDifference = double.MaxValue;
+                        keepThrough = null;
+
                         /* Search through each train for the corresponding through train. */
                         foreach (Train throughTrain in trains)
                         {
                             /* Find the location where the stopped train restarts. */
                             int idx = throughTrain.journey.FindIndex(t => t.kilometreage == pair.restartLocation);
-
-                            /* Ensure the train is going in the opposite direction to the stopped train. */
-                            if (throughTrain.trainDirection != pair.stoppedTrain.trainDirection) // may need to check not "invalid, or unknown"
+                            
+                            if (throughTrain.trainDirection != pair.stoppedTrain.trainDirection && throughTrain.journey[idx].interpolate)
                             {
-                                /* calcualte the time difference of each train at the restart location. */
+                                /* Calcualte the time difference of each train at the restart location. */
                                 double timeDifference = (pair.stoppedTrain.journey[idx].dateTime - throughTrain.journey[idx].dateTime).TotalMinutes;
 
-                                /* Im concerned that this may capture additonal trains, but its unlikely that there will be 
-                                 * multiple trains in opposing direction so close to each other.
-                                 */
-                                /* If the time difference is less than the threshold, then the train is considered to be the through train. */
-                                if (timeDifference > 0 && timeDifference < timeThreshold)
-                                    pair.throughTrain = throughTrain;
-
+                                if (timeDifference > -1 && timeDifference < minDifference)
+                                {
+                                    /* only keep the through train that is closest in time to the stopped train. */
+                                    minDifference = timeDifference;
+                                    keepThrough = throughTrain;
+                                }
+                                                               
                             }
 
                         }
-                    }
-                }
-            }
+                        /* Populate the through train. */
+                        pair.throughTrain = keepThrough;
+                    } 
+                }   
+            }   
         }
 
         /// <summary>
@@ -328,10 +376,9 @@ namespace TransactionTime
                 transactionTime = timeToReachTrackSpeed - simulatedTrainTime + timeToClearLoop;
 
                 /* Identify the pairs that should be kept based on the distance required to achieve 
-                 * track speed and positive time components. 
+                 * track speed and positive transaction time.
                  */
-                if (timeToReachTrackSpeed > 0 && simulatedTrainTime > 0 && timeToClearLoop > 0 && transactionTime > 0 &&
-                    distanceToTrackSpeed < maxDistanceToTrackSpeed)
+                if (transactionTime > 0 && distanceToTrackSpeed < maxDistanceToTrackSpeed)
                     keepIdx.Add(trainPairs.IndexOf(pair));
 
                 /* Populate the transaction time and its componenets for each train pair. */
@@ -435,8 +482,7 @@ namespace TransactionTime
             /* Return the time compenents as a list. */
             return new List<double>(new double[] { timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop, distanceToTrackSpeed });
         }
-                
 
-
+        
     }
 }

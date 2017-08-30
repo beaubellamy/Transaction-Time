@@ -588,15 +588,15 @@ namespace TransactionTime
             destinationDirectory.ForeColor = SystemColors.ActiveCaptionText;
 
             /* Settings */
-            fromDate.Value = new DateTime(2017, 1, 1);
-            toDate.Value = new DateTime(2017, 4, 1);
+            fromDate.Value = new DateTime(2017, 1, 2);  // 2017, 1, 1
+            toDate.Value = new DateTime(2017, 1, 3);    // 2017, 4, 1
 
             startInterpolationKm.Text = "264";
             endInterpolationKm.Text = "541";
             interpolationInterval.Text = "50";
 
-            minimumJourneyDistance.Text = "250";
-            dataSeparation.Text = "4";
+            minimumJourneyDistance.Text = "20"; // 250
+            dataSeparation.Text = "400";        // 4
             timeSeparation.Text = "10";
 
             trainLengthKm.Text = "1.5";
