@@ -73,10 +73,8 @@ namespace TransactionTime
             List<Train> trainList = new List<Train>();
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
             
-            int increasingTrains = trainList.Where(t => t.trainDirection == direction.IncreasingKm).Count();
-            int decreasingTrains = trainList.Where(t => t.trainDirection == direction.DecreasingKm).Count();
-            
-            FileOperations.writeRawTrainDataWithTime(trainList, Settings.aggregatedDestination);
+            /* Write the raw data to file - usefull for creating train graphs */
+            //FileOperations.writeRawTrainDataWithTime(trainList, Settings.aggregatedDestination);
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
