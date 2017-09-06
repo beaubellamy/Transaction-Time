@@ -33,7 +33,9 @@ namespace TransactionTime
             /* Read the data. */
             List<TrainRecord> TrainRecords = new List<TrainRecord>();
             TrainRecords = FileOperations.readICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
-            
+            /* When using Gunnedah Basin Data 2016-2017 PN+QR2.txt use the readICEData2() function. */
+
+
             if (TrainRecords.Count() == 0)
             {
                 Tools.messageBox("There are no records in the list to analyse.", "No trains available.");
@@ -43,10 +45,11 @@ namespace TransactionTime
             operators.Remove(trainOperator.Unknown);
             int numberOfOperators = operators.Count();
 
-            /* Set simulation catagories [TRAP:Set analysis catagories] */
+            /* Set simulation categories [TRAP:Set analysis categories] */
             List<Category> simCategories = new List<Category>();
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
+            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
             /* TRAP: Multiple if conditions */
             /* If further development is required to use different train types (ie, operators, by commodity, etc), 
              * the neccesasry code is in the TRAP tool. 
@@ -55,16 +58,9 @@ namespace TransactionTime
             /* Create the list of simulated trains. */
             List<Train> simulatedTrains = new List<Train>();
 
-            /* Read in the simulation data and interpolate to the desired granularity. */
-            for (int index = 0; index < simCategories.Count(); index++)
-            {
-                simulatedTrains.Add(FileOperations.readSimulationData(Settings.simulationFiles[index * 2], simCategories[index], direction.IncreasingKm));
-                simulatedTrains.Add(FileOperations.readSimulationData(Settings.simulationFiles[index * 2 + 1], simCategories[index], direction.DecreasingKm));
-            }
-
-            /* Interpolate the simulations to the same granularity as the ICE data will be. */
+            /* Read the actual averaged train performance for each category. */
             List<Train> interpolatedSimulations = new List<Train>();
-            interpolatedSimulations = Processing.interpolateTrainData(simulatedTrains, trackGeometry, Settings.startInterpolationKm, Settings.endInterpolationKm, Settings.interpolationInterval);
+            interpolatedSimulations.AddRange(FileOperations.readSimulationData(Settings.actualAveragePerformanceFile, simCategories.Count()));
 
             /* Sort the data by [trainID, locoID, Date & Time, kmPost]. */
             List<TrainRecord> OrderdTrainRecords = new List<TrainRecord>();
@@ -94,17 +90,17 @@ namespace TransactionTime
             
             /* Identify the corresponding through trains for the trains that have stopped.  */
             populateThroughTrains(trainPairs, loopLocations, interpolatedTrains, Settings.throughTrainTime);
-
+                        
             /* Ignore the train pairs where we do not have an identified through train. */
             trainPairs = trainPairs.Where(p => p.throughTrain != null).ToList();
-            
+
             /* Order the remaining pairs by loop location, stopping train direction and ID. */
             trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainDirection).ThenBy(t => t.stoppedTrain.trainID).ToList();
             trainPairs = calculateTransactionTime(trainPairs, interpolatedSimulations, Settings.maxDistanceToTrackSpeed, Settings.trackSpeedFactor, Settings.interpolationInterval, Settings.trainLength);
-            
+
             /* Remove outliers [ie transaction time greater than transaction time outlier threshold (10 min)]*/
             trainPairs = trainPairs.Where(p => p.transactionTime < Settings.transactionTimeOutlierThreshold).ToList();
-            
+
             /* Generate the statistics for the list of train pairs in each loop */
             List<TrainPairStatistics> stats = new List<TrainPairStatistics>();
             foreach (LoopLocation loop in loopLocations)
@@ -386,8 +382,6 @@ namespace TransactionTime
                 pair.timeBetweenClearingLoopAndRestart = timeToClearLoop;
                 pair.transactionTime = transactionTime;
 
-
-
             }
 
             /* Select only the train pairs that are valid. */
@@ -481,6 +475,6 @@ namespace TransactionTime
             return new List<double>(new double[] { timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop, distanceToTrackSpeed });
         }
 
-        
+
     }
 }
