@@ -62,145 +62,14 @@ namespace TransactionTime
         /// </summary>
         /// <param name="sender">The object container.</param>
         /// <param name="e">The event arguments.</param>
-        private void simulationFileButton1_Click(object sender, EventArgs e)
+        private void actualAverageFileButton_Click(object sender, EventArgs e)
         {
-            /* Add the simualtion file to the list at the correct index. */
-            setSimulationFile(simulation1Filename, 0);
-        }
-
-        /// <summary>
-        /// Select a simulation file
-        /// </summary>
-        /// <param name="sender">The object container.</param>
-        /// <param name="e">The event arguments.</param>
-        private void simulationFileButton2_Click(object sender, EventArgs e)
-        {
-            /* Add the simualtion file to the list at the correct index. */
-            setSimulationFile(simulation2Filename, 1);
-        }
-
-        /// <summary>
-        /// Select a simulation file
-        /// </summary>
-        /// <param name="sender">The object container.</param>
-        /// <param name="e">The event arguments.</param>
-        private void simulationFileButton3_Click(object sender, EventArgs e)
-        {
-            /* Add the simualtion file to the list at the correct index. */
-            setSimulationFile(simulation3Filename, 2);
-        }
-
-        /// <summary>
-        /// Select a simulation file
-        /// </summary>
-        /// <param name="sender">The object container.</param>
-        /// <param name="e">The event arguments.</param>
-        private void simulationFileButton4_Click(object sender, EventArgs e)
-        {
-            /* Add the simualtion file to the list at the correct index. */
-            setSimulationFile(simulation4Filename, 3);
-        }
-
-        /// <summary>
-        /// Helper function to set the simulation file parameters and add the simulation file into the list in the correct index.
-        /// </summary>
-        /// <param name="simulationFile">Form object to populate.</param>
-        /// <param name="index">Insertion index into the simulation file list.</param>
-        private void setSimulationFile(TextBox simulationFile, int index)
-        {
-            string filename = null;
-            string direction = null;
-            /* Extract the simulation Category. */
-            string Category = getSimulationCategory(index);
-
-            /* Determine the direction of the simulation. */
-            if ((index % 2) == 0)
-                direction = "increasing";
-            else
-                direction = "decreasing";
-
-            /* Create a meaningful string to help user identify the correct file. */
-            string browseString = "Select the " + Category + " " + direction + " km simulation file.";
-
-            /* Select the simulation file using the browser and insert into the simulation file list. */
-            filename = Tools.selectDataFile(caption: browseString);
-            Settings.simulationFiles[index] = filename;
-            simulationFile.Text = Path.GetFileName(filename);
-            simulationFile.ForeColor = System.Drawing.Color.Black;
+            /* Select the data file. */
+            Settings.actualAveragePerformanceFile = Tools.selectDataFile(caption: "Select the actual average performance file.");
+            actualAveragePerformanceFile.Text = Path.GetFileName(Settings.actualAveragePerformanceFile);
+            actualAveragePerformanceFile.ForeColor = System.Drawing.Color.Black;
         }
         
-        /// <summary>
-        /// Identify the simulation Category based on the index in the list.
-        /// </summary>
-        /// <param name="index">Index of the simulation Category</param>
-        /// <returns>A string identifying the simulation Category.</returns>
-        private string getSimulationCategory(int index)
-        {
-            /* Preliminiary function to set simulation catagories.
-             * If the operator catagory object are required, the code below is kept for use.
-             */
-
-            /* Identify which simulation Category is being selected. */
-            //if ((Operator1Category.SelectedItem != null || Operator2Category.SelectedItem != null || Operator3Category.SelectedItem != null) &&
-            //    (Operator1Category.Text != "" || Operator2Category.Text != "" || Operator3Category.Text != ""))
-            //{
-            //    /* Return the appropriate operator. */
-            //    if (index < 2)
-            //        return Operator1Category.SelectedItem.ToString();
-            //    else if (index < 4)
-            //        return Operator2Category.SelectedItem.ToString();
-            //    else
-            //        return Operator3Category.SelectedItem.ToString();
-            //}
-            //else if ((Commodity1Category.SelectedItem != null || Commodity2Category.SelectedItem != null || Commodity3Category.SelectedItem != null) &&
-            //    (Commodity1Category.Text != "" || Commodity2Category.Text != "" || Commodity3Category.Text != ""))
-            //{
-            //    /* Return the appropriate Commodity. */
-            //    if (index < 2)
-            //        return Commodity1Category.SelectedItem.ToString();
-            //    else if (index < 4)
-            //        return Commodity2Category.SelectedItem.ToString();
-            //    else
-            //        return Commodity3Category.SelectedItem.ToString();
-            //}
-            //else
-
-            if (Settings.analysisCategory == analysisCategory.TrainOperator)
-            {
-                /* Return the appropriate power to weight Category. */
-                if (index < 2)
-                    return "Pacific National";
-                else if (index < 4)
-                    return "Aurizon";
-                else
-                    return "Alternative";
-            }
-            //else if (Settings.analysisCategory == analysisCategory.TrainCommodity)
-            //{
-            //    /* Return the appropriate power to weight Category. */
-            //    if (index < 2)
-            //        return "";
-            //    else if (index < 4)
-            //        return "";
-            //    else
-            //        return "";
-            //}
-            else if (Settings.analysisCategory == analysisCategory.TrainPowerToWeight)
-            {
-                /* Return the appropriate power to weight Category. */
-                if (index < 2)
-                    return "Underpowered";
-                else if (index < 4)
-                    return "Overpowered";
-                else
-                    return "Alternative";
-            }
-            else 
-            {
-                return "unknown";
-            }
-        }
-
         /// <summary>
         /// Select the desination folder to save all the files to.
         /// </summary>
@@ -449,7 +318,7 @@ namespace TransactionTime
         }
 
         /// <summary>
-        /// Assigne the form parameters to the Settings parameters.
+        /// Assign the form parameters to the Settings parameters.
         /// </summary>
         /// <param name="form">The current form object.</param>
         public void setFormParameters(TransactionTimeFrom form)
@@ -555,7 +424,7 @@ namespace TransactionTime
 
             string internalDirectory = @"S:\Corporate Strategy\Infrastructure Strategies\Simulations\Train Performance Analysis\Gunnedah Basin";
             /* Data File */
-            Settings.dataFile = internalDirectory + @"\Gunnedah Basin Data 201701-201703 - all trains.txt";
+            Settings.dataFile = internalDirectory + @"\Gunnedah Basin Data 2016-2017 PN+QR.txt"; //Gunnedah Basin Data 201701-201703 - all trains.txt";
             dataFilename.Text = Path.GetFileName(Settings.dataFile);
             dataFilename.ForeColor = SystemColors.ActiveCaptionText;
 
@@ -565,23 +434,10 @@ namespace TransactionTime
             geometryFilename.ForeColor = SystemColors.ActiveCaptionText;
 
             /* Simulation files */
-            Settings.simulationFiles[0] = internalDirectory + @"\PacificNational-Increasing.csv";
-            simulation1Filename.Text = Path.GetFileName(Settings.simulationFiles[0]);
-            simulation1Filename.ForeColor = SystemColors.ActiveCaptionText;
-
-            Settings.simulationFiles[1] = internalDirectory + @"\PacificNational-Decreasing.csv";
-            simulation2Filename.Text = Path.GetFileName(Settings.simulationFiles[1]);
-            simulation2Filename.ForeColor = SystemColors.ActiveCaptionText;
+            Settings.actualAveragePerformanceFile = internalDirectory + @"\Gunnedah Actual Average Trains.csv"; //PacificNational-Increasing.csv";
+            actualAveragePerformanceFile.Text = Path.GetFileName(Settings.actualAveragePerformanceFile);
+            actualAveragePerformanceFile.ForeColor = SystemColors.ActiveCaptionText;
             
-            Settings.simulationFiles[2] = internalDirectory + @"\Aurizon-Increasing-60.csv";
-            simulation3Filename.Text = Path.GetFileName(Settings.simulationFiles[2]);
-            simulation3Filename.ForeColor = SystemColors.ActiveCaptionText;
-            
-            Settings.simulationFiles[3] = internalDirectory + @"\Aurizon-Decreasing.csv";
-            simulation4Filename.Text = Path.GetFileName(Settings.simulationFiles[3]);
-            simulation4Filename.ForeColor = SystemColors.ActiveCaptionText;
-            
-
             /* Destination Folder */
             Settings.aggregatedDestination = internalDirectory;
             destinationDirectory.Text = Settings.aggregatedDestination;
@@ -645,19 +501,9 @@ namespace TransactionTime
             geometryFilename.ForeColor = SystemColors.InactiveCaptionText;
 
             /* Simulation files */
-            Settings.simulationFiles = new List<string>(new string[6]);
-            simulation1Filename.Text = "<Select a simualtion file>";
-            simulation1Filename.ForeColor = SystemColors.InactiveCaptionText;
-
-            simulation2Filename.Text = "<Select a simualtion file>";
-            simulation2Filename.ForeColor = SystemColors.InactiveCaptionText;
-
-            simulation3Filename.Text = "<Select a simualtion file>";
-            simulation3Filename.ForeColor = SystemColors.InactiveCaptionText;
-
-            simulation4Filename.Text = "<Select a simualtion file>";
-            simulation4Filename.ForeColor = SystemColors.InactiveCaptionText;
-
+            Settings.actualAveragePerformanceFile = null;
+            actualAveragePerformanceFile.Text = "<Select a simualtion file>";
+            actualAveragePerformanceFile.ForeColor = SystemColors.InactiveCaptionText;
 
             /* Destination Folder */
             Settings.aggregatedDestination = null;

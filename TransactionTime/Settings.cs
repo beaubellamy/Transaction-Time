@@ -17,7 +17,7 @@ namespace TransactionTime
         public static string geometryFile = null;
         
         /* Default number of simulation Categories is 3, hence, the default number of simulation files is 6, one for each direction */
-        public static List<string> simulationFiles = new List<string>(new string[6]);
+        public static string actualAveragePerformanceFile = null;
         public static string aggregatedDestination = null;
         
         public static analysisCategory analysisCategory = analysisCategory.TrainOperator;
