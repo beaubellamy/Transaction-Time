@@ -346,6 +346,7 @@ namespace TransactionTime
             /* Cycle through each train pair. */
             foreach (TrainPair pair in trainPairs)
             {
+                
                 timeToReachTrackSpeed = 0;
                 simulatedTrainTime = 0;
                 timeToClearLoop = 0;
@@ -406,6 +407,7 @@ namespace TransactionTime
         /// <returns>A list containing the transaction time components and the distance required to achieve track speed.</returns>
         public static List<double> calculateTransactionTimeComponents(TrainPair pair, Train simulation, double maxDistanceToTrackSpeed, double trackSpeedFactor, double interpolationInterval, double trainLength)
         {
+            
             double timeToReachTrackSpeed = 0;
             double simulatedTrainTime = 0;
             double timeToClearLoop = 0;
@@ -463,7 +465,7 @@ namespace TransactionTime
             trackSpeedLocationIdx = trackSpeedLocationIdx + increment;
             timeToReachTrackSpeed += (pair.stoppedTrain.journey[trackSpeedLocationIdx].dateTime - pair.stoppedTrain.journey[trackSpeedLocationIdx - increment].dateTime).TotalMinutes;
             simulatedTrainTime += (simulation.journey[trackSpeedLocationIdx].dateTime - simulation.journey[trackSpeedLocationIdx - increment].dateTime).TotalMinutes;
-
+                       
             /* Time when the stopped train restarts. */
             restartTime = pair.stoppedTrain.journey[restartIdx].dateTime;
             /* Time when the through train clears the loop. */
