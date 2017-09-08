@@ -452,7 +452,7 @@ namespace TransactionTime
             interpolationInterval.Text = "50";
 
             minimumJourneyDistance.Text = "20"; // 250
-            dataSeparation.Text = "400";        // 4
+            dataSeparation.Text = "4";
             timeSeparation.Text = "10";
 
             trainLengthKm.Text = "1.5";
