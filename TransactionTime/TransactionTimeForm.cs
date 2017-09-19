@@ -470,16 +470,85 @@ namespace TransactionTime
         }
 
         /// <summary>
-        /// Function detemrines if the testing parameters for the Gunnedah basin
+        /// Set the Ulan Line testing parameters.
+        /// </summary>
+        private void setUlanLineParameters()
+        {
+            resetDefaultParameters();
+
+            string internalDirectory = @"S:\Corporate Strategy\Infrastructure Strategies\Simulations\Train Performance Analysis\Ulan";
+            /* Data File */
+            Settings.dataFile = internalDirectory + @"\Ulan Data 2017-201709.txt"; //Ulan Data 2017-20170531-2.txt
+            dataFilename.Text = Path.GetFileName(Settings.dataFile);
+            dataFilename.ForeColor = SystemColors.ActiveCaptionText;
+
+            /* Geometry File */
+            Settings.geometryFile = internalDirectory + @"\Ulan Geometry.csv";
+            geometryFilename.Text = Path.GetFileName(Settings.geometryFile);
+            geometryFilename.ForeColor = SystemColors.ActiveCaptionText;
+
+            /* Simulation files */
+            Settings.actualAveragePerformanceFile = internalDirectory + @"\Ulan Actual Average Trains.csv";
+            actualAveragePerformanceFile.Text = Path.GetFileName(Settings.actualAveragePerformanceFile);
+            actualAveragePerformanceFile.ForeColor = SystemColors.ActiveCaptionText;
+
+            /* Destination Folder */
+            Settings.aggregatedDestination = internalDirectory;
+            destinationDirectory.Text = Settings.aggregatedDestination;
+            destinationDirectory.ForeColor = SystemColors.ActiveCaptionText;
+
+            /* Settings */
+            fromDate.Value = new DateTime(2017, 1, 2);  // 2017, 1, 1
+            toDate.Value = new DateTime(2017, 1, 3);    // 2017, 4, 1
+
+            startInterpolationKm.Text = "280";
+            endInterpolationKm.Text = "460";
+            interpolationInterval.Text = "50";
+
+            minimumJourneyDistance.Text = "20"; // 250
+            dataSeparation.Text = "4";
+            timeSeparation.Text = "10";
+
+            trainLengthKm.Text = "1.5";
+            trackSpeedPercent.Text = "90";
+            maxDistanceToTrackSpeed.Text = "5";
+
+            throughTrainTime.Text = "10";
+            stoppingThreshold.Text = "5";
+            restartThreshold.Text = "10";
+
+            transactionTimeOutlier.Text = "10";
+
+            Settings.analysisCategory = analysisCategory.Unknown;
+
+        }
+        
+        /// <summary>
+        /// Function determines if the testing parameters for the Gunnedah basin
         /// need to be set, or resets the default settings.
         /// </summary>
         /// <param name="sender">The object container.</param>
         /// <param name="e">The event arguments.</param>
         private void GunnedahBasinParameters_CheckedChanged(object sender, EventArgs e)
         {
-            /* If Tarcoola to Kalgoorlie testing flag is checked, set the appropriate parameters. */
+            /* If Gunnedah testing flag is checked, set the appropriate parameters. */
             if (GunnedahBasinParameters.Checked)
                 setGunnedahBasinParameters();
+            else
+                resetDefaultParameters();
+        }
+
+        /// <summary>
+        /// Function determines if the testing parameters for the Ulan line
+        /// need to be set, or resets the default settings.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void UlanLineParameters_CheckedChanged(object sender, EventArgs e)
+        {
+            /* If Ulan testing flag is checked, set the appropriate parameters. */
+            if (UlanLineParameters.Checked)
+                setUlanLineParameters();
             else
                 resetDefaultParameters();
         }
@@ -537,6 +606,8 @@ namespace TransactionTime
            
 
         }
+
+        
     }
     
 }

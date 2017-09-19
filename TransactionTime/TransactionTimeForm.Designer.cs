@@ -74,6 +74,7 @@
             this.toLabel = new System.Windows.Forms.Label();
             this.fromLabel = new System.Windows.Forms.Label();
             this.DateRangeLabel = new System.Windows.Forms.Label();
+            this.UlanLineParameters = new System.Windows.Forms.CheckBox();
             this.TransactionTimeForm.SuspendLayout();
             this.fileTab.SuspendLayout();
             this.ParametersTab.SuspendLayout();
@@ -91,6 +92,7 @@
             // 
             // fileTab
             // 
+            this.fileTab.Controls.Add(this.UlanLineParameters);
             this.fileTab.Controls.Add(this.GunnedahBasinParameters);
             this.fileTab.Controls.Add(this.destinationDirectory);
             this.fileTab.Controls.Add(this.directoryButton);
@@ -533,6 +535,17 @@
             this.DateRangeLabel.TabIndex = 55;
             this.DateRangeLabel.Text = "Date Range:";
             // 
+            // UlanLineParameters
+            // 
+            this.UlanLineParameters.AutoSize = true;
+            this.UlanLineParameters.Location = new System.Drawing.Point(749, 56);
+            this.UlanLineParameters.Name = "UlanLineParameters";
+            this.UlanLineParameters.Size = new System.Drawing.Size(127, 17);
+            this.UlanLineParameters.TabIndex = 15;
+            this.UlanLineParameters.Text = "Ulan Line Parameters";
+            this.UlanLineParameters.UseVisualStyleBackColor = true;
+            this.UlanLineParameters.CheckedChanged += new System.EventHandler(this.UlanLineParameters_CheckedChanged);
+            // 
             // TransactionTimeFrom
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -598,6 +611,7 @@
         private System.Windows.Forms.Label executionTime;
         private System.Windows.Forms.Label ExecitionTimeLabel;
         private System.Windows.Forms.CheckBox GunnedahBasinParameters;
+        private System.Windows.Forms.CheckBox UlanLineParameters;
 
     }
 }

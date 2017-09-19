@@ -49,6 +49,8 @@ namespace TransactionTime
             List<Category> simCategories = new List<Category>();
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
+            // Add when running Ulan Line data
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
             /* TRAP: Multiple if conditions */
             /* If further development is required to use different train types (ie, operators, by commodity, etc), 
@@ -69,8 +71,10 @@ namespace TransactionTime
             List<Train> trainList = new List<Train>();
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
             
-            /* Write the raw data to file - usefull for creating train graphs */
-            //FileOperations.writeRawTrainDataWithTime(trainList, Settings.aggregatedDestination);
+            //List<Train> rawTrainList = new List<Train>();
+            //rawTrainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
+            ///* Write the raw data to file - usefull for creating train graphs */
+            //FileOperations.writeRawTrainDataWithTime(rawTrainList, Settings.aggregatedDestination);
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
@@ -97,7 +101,7 @@ namespace TransactionTime
             /* Order the remaining pairs by loop location, stopping train direction and ID. */
             trainPairs = trainPairs.OrderBy(t => t.loopLocation.loopStart).ThenBy(t => t.stoppedTrain.trainDirection).ThenBy(t => t.stoppedTrain.trainID).ToList();
             trainPairs = calculateTransactionTime(trainPairs, interpolatedSimulations, Settings.maxDistanceToTrackSpeed, Settings.trackSpeedFactor, Settings.interpolationInterval, Settings.trainLength);
-
+            
             /* Remove outliers [ie transaction time greater than transaction time outlier threshold (10 min)]*/
             trainPairs = trainPairs.Where(p => p.transactionTime < Settings.transactionTimeOutlierThreshold).ToList();
 
@@ -187,7 +191,6 @@ namespace TransactionTime
                 /* loop through each loop location. */
                 for (int loopIdx = 0; loopIdx < loopLocations.Count(); loopIdx++)
                 {
-
                     /* Find the minimum speed within the loop. */
                     speeds = train.journey.Where(t => t.interpolate == true).
                                 Where(t => t.kilometreage >= loopLocations[loopIdx].loopStart).
@@ -475,7 +478,6 @@ namespace TransactionTime
             /* Return the time compenents as a list. */
             return new List<double>(new double[] { timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop, distanceToTrackSpeed });
         }
-
 
     }
 }
