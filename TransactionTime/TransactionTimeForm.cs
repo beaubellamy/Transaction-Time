@@ -505,7 +505,7 @@ namespace TransactionTime
             endInterpolationKm.Text = "460";
             interpolationInterval.Text = "50";
 
-            minimumJourneyDistance.Text = "20"; // 250
+            minimumJourneyDistance.Text = "5"; // 250
             dataSeparation.Text = "4";
             timeSeparation.Text = "10";
 
@@ -606,7 +606,6 @@ namespace TransactionTime
            
 
         }
-
         
     }
     

@@ -30,6 +30,7 @@
         {
             this.TransactionTimeForm = new System.Windows.Forms.TabControl();
             this.fileTab = new System.Windows.Forms.TabPage();
+            this.UlanLineParameters = new System.Windows.Forms.CheckBox();
             this.GunnedahBasinParameters = new System.Windows.Forms.CheckBox();
             this.destinationDirectory = new System.Windows.Forms.TextBox();
             this.directoryButton = new System.Windows.Forms.Button();
@@ -74,7 +75,6 @@
             this.toLabel = new System.Windows.Forms.Label();
             this.fromLabel = new System.Windows.Forms.Label();
             this.DateRangeLabel = new System.Windows.Forms.Label();
-            this.UlanLineParameters = new System.Windows.Forms.CheckBox();
             this.TransactionTimeForm.SuspendLayout();
             this.fileTab.SuspendLayout();
             this.ParametersTab.SuspendLayout();
@@ -109,6 +109,17 @@
             this.fileTab.TabIndex = 0;
             this.fileTab.Text = "Select Files";
             this.fileTab.UseVisualStyleBackColor = true;
+            // 
+            // UlanLineParameters
+            // 
+            this.UlanLineParameters.AutoSize = true;
+            this.UlanLineParameters.Location = new System.Drawing.Point(749, 56);
+            this.UlanLineParameters.Name = "UlanLineParameters";
+            this.UlanLineParameters.Size = new System.Drawing.Size(127, 17);
+            this.UlanLineParameters.TabIndex = 15;
+            this.UlanLineParameters.Text = "Ulan Line Parameters";
+            this.UlanLineParameters.UseVisualStyleBackColor = true;
+            this.UlanLineParameters.CheckedChanged += new System.EventHandler(this.UlanLineParameters_CheckedChanged);
             // 
             // GunnedahBasinParameters
             // 
@@ -534,17 +545,6 @@
             this.DateRangeLabel.Size = new System.Drawing.Size(68, 13);
             this.DateRangeLabel.TabIndex = 55;
             this.DateRangeLabel.Text = "Date Range:";
-            // 
-            // UlanLineParameters
-            // 
-            this.UlanLineParameters.AutoSize = true;
-            this.UlanLineParameters.Location = new System.Drawing.Point(749, 56);
-            this.UlanLineParameters.Name = "UlanLineParameters";
-            this.UlanLineParameters.Size = new System.Drawing.Size(127, 17);
-            this.UlanLineParameters.TabIndex = 15;
-            this.UlanLineParameters.Text = "Ulan Line Parameters";
-            this.UlanLineParameters.UseVisualStyleBackColor = true;
-            this.UlanLineParameters.CheckedChanged += new System.EventHandler(this.UlanLineParameters_CheckedChanged);
             // 
             // TransactionTimeFrom
             // 
