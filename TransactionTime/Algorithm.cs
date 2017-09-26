@@ -78,8 +78,11 @@ namespace TransactionTime
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
-            List<Train> interpolatedTrains = new List<Train>();
+            List<Train> interpolatedTrains = new List<Train>(); 
+            List<Train> utilisationTrains = new List<Train>();
             interpolatedTrains = Processing.interpolateTrainDataWithGaps(trainList, trackGeometry, Settings.startInterpolationKm, Settings.endInterpolationKm, Settings.interpolationInterval);
+            /* Interpoalte for utilisation calculations. ie interpoalte through the gaps */
+            utilisationTrains = Processing.interpolateTrainData(trainList, trackGeometry, Settings.startInterpolationKm, Settings.endInterpolationKm, Settings.interpolationInterval);
 
             /**************************************************************************************************/
 
@@ -89,8 +92,7 @@ namespace TransactionTime
             /* Identify all the potential loop locations where a train may be forced to stop. */
             List<LoopLocation> loopLocations = findAllLoopLocations(interpolatedTrains[0], Settings.endInterpolationKm);
             /* Identify the boundaries of the sections for the section utilisation. */
-            List<Section> sections = findAllSections(interpolatedTrains[0], Settings.endInterpolationKm);
-
+            List<Section> sections = findAllSections(utilisationTrains[0], Settings.endInterpolationKm);
 
             /* Identify all the trains that stop at a loop. */
             List<TrainPair> trainPairs = findAllStoppingTrains(interpolatedTrains, loopLocations, Settings.stoppingSpeedThreshold, Settings.restartSpeedThreshold);
@@ -99,6 +101,7 @@ namespace TransactionTime
             populateThroughTrains(trainPairs, loopLocations, interpolatedTrains, Settings.throughTrainTime);
             List<TrainPair> allTrainPairs = trainPairs;
 
+            /******************************************************************************************************/
             /* Transaction time calculations */
 
             /* Ignore the train pairs where we do not have an identified through train. */
@@ -127,6 +130,7 @@ namespace TransactionTime
             FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
             FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
 
+            /******************************************************************************************************/
             /* Section Utilisation Calcualtions */
 
             /* Initialise the current train properties. */
@@ -136,15 +140,25 @@ namespace TransactionTime
             /* Initialise the time range to search for trains in each section. */
             DateTime currentTime = Settings.dateRange[0];
             DateTime endTime = new DateTime();
+            /* Flag to indicate to ignore a train due to lack of data. */
+            bool ignoreTrain = false;
 
-            /* Create a list of sectionBlock objects to maintain utilisation calculations. */
-            List<SectionBlock> utilisationBlock = new List<SectionBlock>();
+            /* Create a list of occupation block objects to maintain utilisation calculations. */
+            List<OccupationBlock> occupationBlock = new List<OccupationBlock>();
+            /* Create a list of each occupation block for each section. */
+            List<List<OccupationBlock>> sectionUtilisation = new List<List<OccupationBlock>>();
+
+            /* A sorted dictionary list of ustilisation section for rolling 24 hourly period. */
+            SortedDictionary<string, List<double>> rollingUtilisation = new SortedDictionary<string, List<double>>();
+            List<double> rollingSectionUtilisation = new List<double>();
+            /* Calcualte how many 24 hour periods need to be processed. */
+            int hourlyPeriods = (int)(Settings.dateRange[1] - Settings.dateRange[0]).TotalHours;
 
             /* Loop through each sections. */
             foreach (Section section in sections)
             {
                 /* Find the first train that occupies the section. */
-                train = firstTrainInSection(interpolatedTrains, section, currentTime);
+                train = firstTrainInSection(utilisationTrains, section, currentTime);
                 currentTrainJourney = train.journey;
 
                 /* Reset the current time to the earliest time for this train, where it was still in the section. 
@@ -154,13 +168,13 @@ namespace TransactionTime
                     t.speed > 0).Min(t => t.dateTime);
 
                 /* Flag, to indicate that the current section block is still active. */
-                bool activeSectionBlock = true;
-
+                bool activeOccupationBlock = true;
+                
                 /* Continue searching for trains in the current section until the end of the analysis period is reached. */
                 while (currentTime < Settings.dateRange[1])
                 {
                     /* While the section block is active, continue searching for the end of the block. */
-                    while (activeSectionBlock)
+                    while (activeOccupationBlock)
                     {
                         /* Set the current journey to the current train. */
                         currentTrainJourney = train.journey;
@@ -171,39 +185,101 @@ namespace TransactionTime
                         else
                         {
                             /* Determine the time the train leaves the section. */
-                            endTime = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart && j.kilometreage < section.sectionEnd).Max(j => j.dateTime);
+                            currentTrainJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart && j.kilometreage < section.sectionEnd &&
+                                j.speed > 0).ToList();
+                            
+                            if (currentTrainJourney.Count() > 0)
+                                endTime = currentTrainJourney.Max(j => j.dateTime);
+                            else
+                                /* The boundary of the train has been reached. */
+                                ignoreTrain = true;
 
                             /* Release the active section flag for the next iteration. */
-                            activeSectionBlock = false;
+                            activeOccupationBlock = false;
                         }
                     }
 
                     /* Add the current section block details to the list. */
-                    utilisationBlock.Add(new SectionBlock(section, currentTime, endTime));
+                    if (!ignoreTrain)
+                        occupationBlock.Add(new OccupationBlock(section, currentTime, endTime));
+                    else
+                    {
+                        /* Adjsut the end time to find the next train after the train we are ignoring. */
+                        ignoreTrain = false;
+                        endTime = currentTime.AddMinutes(5);
+                    }
 
                     /* Find the next train that occupies the section. */
-                    train = firstTrainInSection(interpolatedTrains, section, endTime);
+                    train = firstTrainInSection(utilisationTrains, section, endTime);
                     if (train != null)
-                        currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
-                            t.speed > 0).Min(t => t.dateTime);
+                    {
+                        if (train.trainDirection == direction.IncreasingKm)
+                            currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart-1 && t.kilometreage < section.sectionEnd &&
+                                t.speed > 0 && t.dateTime >= endTime).Min(t => t.dateTime);
+                        else
+                            currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd+1 &&
+                                t.speed > 0 &&  t.dateTime >= endTime).Min(t => t.dateTime); 
 
+                    }
                     /* If there are no more train's in the current section, continue to the next section. */
                     else
                         break;
-
+                    
                     /* Reset the active section flag */
-                    activeSectionBlock = true;
+                    activeOccupationBlock = true;
 
                 }
-                /* Reset the search time to the start. */
+
+                /* Reset the search time to the start for the next section. */
                 currentTime = Settings.dateRange[0];
+                
+                /* Aggregate the time to 24 hour periods. */
+                for (int periodIdx = 0; periodIdx < hourlyPeriods; periodIdx++)
+                {
+                    /* Define the time boundaries for the sublist. */
+                    DateTime startDate = Settings.dateRange[0].AddHours(periodIdx);
+                    DateTime endDate = startDate.AddDays(1);
+                                        
+                    /*  Extract the sublist and sum the times */
+                    double totalMinutesOccupied = occupationBlock.Where(u => u.startTime >= startDate && u.endTime < endDate).Sum(u => u.minutesOccupied);
+
+                    /* Add to the dictionary*/
+                    rollingSectionUtilisation.Add(totalMinutesOccupied);
+
+                }
+                
+                /* Buld the key string for the dictionary. */
+                string key = string.Format("{0:0.00} km - {1:0.00} km", section.sectionStart, section.sectionEnd);
+                rollingUtilisation[key] = new List<double> (rollingSectionUtilisation);
+                rollingSectionUtilisation.Clear();
+                
+                /* List of each utilsation block in each section. */
+                sectionUtilisation.Add(new List<OccupationBlock>(occupationBlock));
+                occupationBlock.Clear();
+
             }
 
-        }
+            /* Write the occupation blocks for each section to file.  */
+            FileOperations.writeSectionUtilistion(sectionUtilisation, Settings.aggregatedDestination);
 
+            /* Write the aggregated rolling 24 hour utilisation times to file for each section. */
+            FileOperations.writeRollingUtilistion(rollingUtilisation, Settings.aggregatedDestination, Settings.dateRange);
+
+        }
+        
+        /// <summary>
+        /// Determine if there is a train in the loop waiting to occupy the current section.
+        /// </summary>
+        /// <param name="train">The current train in the section.</param>
+        /// <param name="trainPairs">A list of all train pairs that have been identified.</param>
+        /// <param name="section">The section being occupied.</param>
+        /// <returns>A flag indicating if there is a train in teh loop waiting to occupy the section.</returns>
         private static bool isTrainWaitingToOccupySection(Train train, List<TrainPair> trainPairs, Section section)
         {
+            /* Find a train that is waiting in the loop. */
             Train trainInLoop = findTrainWaitingInLoop(train, trainPairs, section);
+
+            /* If there is not train in the loop, there is no train waiting to occupy the section. */
             if (trainInLoop != null)
                 return true;
             else 
@@ -211,23 +287,73 @@ namespace TransactionTime
 
         }
 
-        
+        /// <summary>
+        /// Find the train waiting in the loop as the current train passes it.
+        /// </summary>
+        /// <param name="train">The train occupying the section.</param>
+        /// <param name="trainPairs">A list of all train pairs that have been identified.</param>
+        /// <param name="section">The section being occupied.</param>
+        /// <returns>The train waiting in the loop or null, if no train exists.</returns>
+        public static Train findTrainWaitingInLoop(Train train, List<TrainPair> trainPairs, Section section)
+        {
+            /* Search through each train pairs */
+            foreach (TrainPair pair in trainPairs)
+            {
+                /* If the current train is in the increasing direction, check the loop at the end of the section. */
+                if (train.trainDirection == direction.IncreasingKm)
+                {
+                    if (Math.Abs(pair.loopLocation.loopStart - section.sectionEnd) < 0.00001 &&
+                        train == pair.throughTrain)
+                        /* Return the stopped train. */
+                        return pair.stoppedTrain;
+                }
+                else
+                {
+                    /* Check the loop at the begining of the section. */
+                    if (Math.Abs(pair.loopLocation.loopEnd - section.sectionStart) < 0.00001 &&
+                            train == pair.throughTrain)
+                        /* Return the stopped train. */
+                        return pair.stoppedTrain;
+                }
 
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Find the next train in the section.
+        /// </summary>
+        /// <param name="trains">A list of all train in the data.</param>
+        /// <param name="section">The current section being occupied.</param>
+        /// <param name="currentTime">The time of day to search for the next train.</param>
+        /// <returns>The next train in the section, or null if none exists.</returns>
         public static Train firstTrainInSection(List<Train> trains, Section section, DateTime currentTime)
-        {// maybe add time time to loo infront of to get the first train of the next sectionblock.
+        {
+            /* Define a sub journey list to define a trains journey inside the current section. */
             List<TrainJourney> sectionJourney = new List<TrainJourney>();
+            /* The earliest time found ahead of the current time. */
             DateTime minimumTime = DateTime.MaxValue;
             DateTime time = new DateTime();
+            /* The train object that will be the next train in section. */
             Train firstTrain = null;
 
+            /* Loop through each train to find the next train in the section */
             foreach (Train train in trains)
             {
-                sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd && 
-                    t.speed > 0 && t.dateTime > currentTime).ToList();
+                /* Include 1 km prior to the section to find any train approaching the section. */
+                if (train.trainDirection == direction.IncreasingKm)
+                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart - 1 && t.kilometreage < section.sectionEnd &&
+                        t.speed > 0 && t.dateTime > currentTime).ToList();
+                else
+                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd + 1 && 
+                        t.speed > 0 && t.dateTime > currentTime).ToList();
+
+                /* If there are points in the section journey, find the earliest time, greater than the current search time. */
                 if (sectionJourney.Count > 0)
                 {
                     time = sectionJourney.Min(t => t.dateTime);
 
+                    /* Find the train with the minimum time. */
                     if (time < minimumTime)
                     {
                         minimumTime = time;
@@ -236,90 +362,10 @@ namespace TransactionTime
                 }
             }
 
-
+            /* Return the next train in the section. */
             return firstTrain;
         }
-
-
-        public static bool doesTrainStopInLoop(Train train, List<TrainPair> trainPairs, Section section)
-        {
-            List<TrainPair> stoppedTrain = new List<TrainPair>();
-
-            if (train.trainDirection == direction.IncreasingKm)
-                stoppedTrain = trainPairs.Where(t => t.stoppedTrain == train && Math.Abs(t.loopLocation.loopStart - section.sectionEnd) < 0.00001).ToList();
-            else
-                stoppedTrain = trainPairs.Where(t => t.stoppedTrain == train && Math.Abs(t.loopLocation.loopEnd - section.sectionStart) < 0.00001).ToList();
-            
-            if (stoppedTrain.Count > 0)
-                return true;
-
-            return false;
-        }
-
-        public static bool doesTrainContinueWithATrainInLoop(Train train, List<TrainPair> trainPairs, Section section)
-        {
-            Train trainInLoop = findTrainWaitingInLoop(train, trainPairs, section);
-            if (!doesTrainStopInLoop(train, trainPairs, section) && trainInLoop != null)
-                return true;
-            else
-                return false;
-        }
-
-        public static bool doesTrainContinueWithoutATrainInLoop(Train train, List<TrainPair> trainPairs, Section section)
-        {
-            Train trainInLoop = findTrainWaitingInLoop(train, trainPairs, section);
-            if (!doesTrainStopInLoop(train, trainPairs, section) && trainInLoop == null)
-                return true;
-            else
-                return false;
-            
-        }
-
-        public static Train findTrainWaitingInLoop(Train train, List<TrainPair> trainPairs, Section section)
-        {
-            foreach (TrainPair pair in trainPairs)
-            {
-                if (train.trainDirection == direction.IncreasingKm)
-                {
-                    if (Math.Abs(pair.loopLocation.loopStart - section.sectionEnd) < 0.00001 && 
-                        train == pair.throughTrain)
-                        return pair.stoppedTrain;
-                }
-                else
-                {
-                    if (Math.Abs(pair.loopLocation.loopEnd - section.sectionStart) < 0.00001 &&
-                            train == pair.throughTrain)
-                        return pair.stoppedTrain;
-                }
-
-            }
-            return null;
-        }
-
-        private static Train findThroughTrain(Train train, List<TrainPair> trainPairs, Section section)
-        {
-           
-            foreach (TrainPair pair in trainPairs)
-            {
-                if (train.trainDirection == direction.IncreasingKm)
-                {
-                    if (Math.Abs(pair.loopLocation.loopStart - section.sectionEnd) < 0.00001 &&
-                        train == pair.stoppedTrain)
-                        return pair.throughTrain;
-                }
-                else
-                {
-                    if (Math.Abs(pair.loopLocation.loopEnd - section.sectionStart) < 0.00001 &&
-                           train == pair.stoppedTrain)
-                        return pair.throughTrain;
-                }
-
-            }
-            return null;
-
-
-        }
-
+        
         /// <summary>
         /// Find the locations of all loops
         /// </summary>
@@ -382,12 +428,6 @@ namespace TransactionTime
             for (int index = 0; index < journey.Count(); index++)
             {
                 /* Find the start of each section */
-                //if (index == 0)
-                //{
-                //    sectionFound = true;
-                //    start = journey[0].kilometreage;
-                //}
-                //else 
                 if (!sectionFound && !journey[index].isLoopHere)
                 {
                     sectionFound = true;
