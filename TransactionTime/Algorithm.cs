@@ -68,13 +68,15 @@ namespace TransactionTime
             List<TrainRecord> OrderdTrainRecords = new List<TrainRecord>();
             OrderdTrainRecords = TrainRecords.OrderBy(t => t.trainID).ThenBy(t => t.locoID).ThenBy(t => t.dateTime).ThenBy(t => t.kmPost).ToList();
 
+            /* Clean the records and create individual train journeys. */
             List<Train> trainList = new List<Train>();
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-
-            //List<Train> rawTrainList = new List<Train>();
-            //rawTrainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-            ///* Write the raw data to file - usefull for creating train graphs */
-            //FileOperations.writeRawTrainDataWithTime(rawTrainList, Settings.aggregatedDestination);
+            
+            /* Perform minor cleaning porocedures and create individual train journeys. */
+            List<Train> rawTrainList = new List<Train>();
+            rawTrainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
+            /* Write the raw data to file - usefull for creating train graphs */
+            FileOperations.writeRawTrainDataWithTime(rawTrainList, Settings.aggregatedDestination);
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
@@ -102,7 +104,8 @@ namespace TransactionTime
             List<TrainPair> allTrainPairs = trainPairs;
 
             /******************************************************************************************************/
-            /* Transaction time calculations */
+            
+            #region transactionTimeCalculations
 
             /* Ignore the train pairs where we do not have an identified through train. */
             trainPairs = trainPairs.Where(p => p.throughTrain != null).ToList();
@@ -130,15 +133,22 @@ namespace TransactionTime
             FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
             FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
 
+            #endregion
+
             /******************************************************************************************************/
-            /* Section Utilisation Calcualtions */
+            
+            # region utilisationCalculations
 
             /* Initialise the current train properties. */
             Train train = new Train();
             List<TrainJourney> currentTrainJourney = new List<TrainJourney>();
+            List<TrainJourney> stopInLoopJourney = new List<TrainJourney>();
 
             /* Initialise the time range to search for trains in each section. */
             DateTime currentTime = Settings.dateRange[0];
+            DateTime previousStartTime = new DateTime();
+            DateTime timeTrainEntersSection = new DateTime();
+            DateTime timeTrainStopsInLoop = Settings.dateRange[1];
             DateTime endTime = new DateTime();
             /* Flag to indicate to ignore a train due to lack of data. */
             bool ignoreTrain = false;
@@ -151,8 +161,13 @@ namespace TransactionTime
             /* A sorted dictionary list of ustilisation section for rolling 24 hourly period. */
             SortedDictionary<string, List<double>> rollingUtilisation = new SortedDictionary<string, List<double>>();
             List<double> rollingSectionUtilisation = new List<double>();
+            
             /* Calcualte how many 24 hour periods need to be processed. */
             int hourlyPeriods = (int)(Settings.dateRange[1] - Settings.dateRange[0]).TotalHours;
+
+            /* Initialise boundary parameters. */
+            double trainLength = Settings.trainLength;
+            double stoppingSpeed = Settings.restartSpeedThreshold;
 
             /* Loop through each sections. */
             foreach (Section section in sections)
@@ -166,10 +181,12 @@ namespace TransactionTime
                  */
                 currentTime = currentTrainJourney.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
                     t.speed > 0).Min(t => t.dateTime);
-
+                
                 /* Flag, to indicate that the current section block is still active. */
                 bool activeOccupationBlock = true;
                 
+                int a = 1;
+
                 /* Continue searching for trains in the current section until the end of the analysis period is reached. */
                 while (currentTime < Settings.dateRange[1])
                 {
@@ -179,19 +196,108 @@ namespace TransactionTime
                         /* Set the current journey to the current train. */
                         currentTrainJourney = train.journey;
 
-                        /* If there is a train in the loop waiting to occupy the section, continue with the new train. */
+                        /* If there is a train in the loop waiting to occupy the section, or if there is a 
+                         * train about to enter the section, continue with the new train. */
                         if (isTrainWaitingToOccupySection(train, trainPairs, section))
-                            train = findTrainWaitingInLoop(train, trainPairs, section);
+                        {
+                            //train = findTrainWaitingInLoop(train, trainPairs, section);
+
+
+                            /* Extract the part of journey of that is in the current section. */
+                            if (train.trainDirection == direction.IncreasingKm)
+                                currentTrainJourney = currentTrainJourney.Where(t => t.kilometreage > section.sectionStart && 
+                                    t.kilometreage < section.sectionEnd + trainLength &&
+                                    t.speed > stoppingSpeed && t.dateTime > endTime).ToList();
+
+                            else
+                                currentTrainJourney = currentTrainJourney.Where(t => t.kilometreage > section.sectionStart - trainLength && 
+                                    t.kilometreage < section.sectionEnd &&
+                                    t.speed > stoppingSpeed && t.dateTime > endTime).ToList();
+
+                            /* Find the time the current train leaves the section. */
+                            if (currentTrainJourney.Count() > 0)
+                            {
+                                /* remove when finished testing */
+                                validateJourney(currentTrainJourney, train.trainID, train.trainDirection);
+                                endTime = currentTrainJourney.Max(t => t.dateTime);
+                            }
+                            else
+                            {
+                                ignoreTrain = true;
+                                activeOccupationBlock = false;
+                                break;
+                            }
+
+                            //endTime = currentTrainJourney.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
+                            //    t.speed > 0 && t.dateTime > endTime).Max(t => t.dateTime);
+
+                            /* Find the next train in the section */
+                            train = firstTrainInSection(utilisationTrains, section, endTime);
+                            
+                            previousStartTime = currentTime;
+
+                            /* Find the time the next train enters the section. */
+                            timeTrainEntersSection = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
+                                t.speed > 0 //&& t.dateTime > endTime
+                                ).Min(t => t.dateTime);
+
+                            /* IF: the train entered the section > 10 minutes after the previous train cleared, 
+                             * set the end time to the time the previous train cleared the section. 
+                             */
+                            if ((timeTrainEntersSection - endTime).TotalMinutes > Settings.transactionTimeOutlierThreshold)
+                            {
+                                activeOccupationBlock = false;
+                                break;
+                            }
+                            
+                        }
                         else
                         {
-                            /* Determine the time the train leaves the section. */
-                            currentTrainJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart && j.kilometreage < section.sectionEnd &&
-                                j.speed > 0).ToList();
-                            
+                            // May not want the speed to be above restart when trying to find the train leaves the section???
+
+                            /* Determine the time the rear of the train leaves the section. */
+                            if (train.trainDirection == direction.IncreasingKm)
+                            {
+                                /* Find the point the train stops, if there is one */
+                                stopInLoopJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionEnd &&
+                                    j.kilometreage < section.sectionEnd + trainLength && 
+                                    j.speed > 0 && j.speed < Settings.stoppingSpeedThreshold).ToList();
+                                
+                                if (stopInLoopJourney.Count > 0)
+                                    timeTrainStopsInLoop = stopInLoopJourney.Min(j => j.dateTime);
+                                
+                                currentTrainJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart &&
+                                    j.kilometreage < section.sectionEnd + trainLength && j.dateTime < timeTrainStopsInLoop && j.speed > stoppingSpeed).ToList();
+                            }
+                            else
+                            {
+                                /* Find the point the train stops, if there is one */
+                                stopInLoopJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart - trainLength &&
+                                    j.kilometreage < section.sectionStart &&
+                                    j.speed > 0 && j.speed < Settings.stoppingSpeedThreshold).ToList();
+                                
+                                if (stopInLoopJourney.Count > 0)
+                                    timeTrainStopsInLoop = stopInLoopJourney.Min(j => j.dateTime);
+                                
+                                currentTrainJourney = currentTrainJourney.Where(j => j.kilometreage > section.sectionStart - trainLength &&
+                                    j.kilometreage < section.sectionEnd && j.dateTime < timeTrainStopsInLoop && j.speed > stoppingSpeed).ToList();
+
+
+                            }
+
                             if (currentTrainJourney.Count() > 0)
+                            {
+                                /* remove when finished testing */
+                                validateJourney(currentTrainJourney, train.trainID,train.trainDirection); // only required for testing if there is any gaps in the journey extracted.
                                 endTime = currentTrainJourney.Max(j => j.dateTime);
+                            }
                             else
                                 /* The boundary of the train has been reached. */
+                                ignoreTrain = true;
+
+                            if (endTime < currentTime)
+                                /* Need to deal with trains that appear to stop in the middle of the section. 
+                                 * This is likely due to drivers not turning the loco ID off at the end of the journey. */
                                 ignoreTrain = true;
 
                             /* Release the active section flag for the next iteration. */
@@ -201,7 +307,11 @@ namespace TransactionTime
 
                     /* Add the current section block details to the list. */
                     if (!ignoreTrain)
+                    {
                         occupationBlock.Add(new OccupationBlock(section, currentTime, endTime));
+                        previousStartTime = currentTime;
+                        
+                    }
                     else
                     {
                         /* Adjsut the end time to find the next train after the train we are ignoring. */
@@ -213,12 +323,9 @@ namespace TransactionTime
                     train = firstTrainInSection(utilisationTrains, section, endTime);
                     if (train != null)
                     {
-                        if (train.trainDirection == direction.IncreasingKm)
-                            currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart-1 && t.kilometreage < section.sectionEnd &&
-                                t.speed > 0 && t.dateTime >= endTime).Min(t => t.dateTime);
-                        else
-                            currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd+1 &&
-                                t.speed > 0 &&  t.dateTime >= endTime).Min(t => t.dateTime); 
+                        currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
+                            t.speed > 0 && t.dateTime > endTime).Min(t => t.dateTime);
+                        
 
                     }
                     /* If there are no more train's in the current section, continue to the next section. */
@@ -227,12 +334,12 @@ namespace TransactionTime
                     
                     /* Reset the active section flag */
                     activeOccupationBlock = true;
-
+                    timeTrainStopsInLoop = Settings.dateRange[1];
                 }
-
-                /* Reset the search time to the start for the next section. */
-                currentTime = Settings.dateRange[0];
                 
+                /**********************************************************************************************/
+                /* Maybe make this section a function. */
+
                 /* Aggregate the time to 24 hour periods. */
                 for (int periodIdx = 0; periodIdx < hourlyPeriods; periodIdx++)
                 {
@@ -248,6 +355,8 @@ namespace TransactionTime
 
                 }
                 
+                /**********************************************************************************************/
+
                 /* Buld the key string for the dictionary. */
                 string key = string.Format("{0:0.00} km - {1:0.00} km", section.sectionStart, section.sectionEnd);
                 rollingUtilisation[key] = new List<double> (rollingSectionUtilisation);
@@ -257,7 +366,13 @@ namespace TransactionTime
                 sectionUtilisation.Add(new List<OccupationBlock>(occupationBlock));
                 occupationBlock.Clear();
 
+                /* Reset the search time to the start for the next section. */
+                currentTime = Settings.dateRange[0];
+                endTime = currentTime;
+
+
             }
+            # endregion
 
             /* Write the occupation blocks for each section to file.  */
             FileOperations.writeSectionUtilistion(sectionUtilisation, Settings.aggregatedDestination);
@@ -267,6 +382,18 @@ namespace TransactionTime
 
         }
         
+        private static void validateJourney(List<TrainJourney> journey,string trainId, direction direction)
+        {
+            double difference = 0;
+
+            for (int i = 1; i < journey.Count(); i++)
+            {
+                difference = journey[i].kilometreage - journey[i - 1].kilometreage;
+                if (difference > 0.050001)
+                    Console.WriteLine("{0}: [{1} - {2}]- {3}:: There is a difference of {4} in the current Train journey.",trainId, i,journey.Count(), direction.ToString(), difference);
+            }
+        }
+
         /// <summary>
         /// Determine if there is a train in the loop waiting to occupy the current section.
         /// </summary>
@@ -302,7 +429,8 @@ namespace TransactionTime
                 /* If the current train is in the increasing direction, check the loop at the end of the section. */
                 if (train.trainDirection == direction.IncreasingKm)
                 {
-                    if (Math.Abs(pair.loopLocation.loopStart - section.sectionEnd) < 0.00001 &&
+                    /* The difference needs to be between 0 and 0.5 km to allow for the alignment between loops and sections. */
+                    if (Math.Abs(pair.loopLocation.loopStart - section.sectionEnd) < 0.050001 &&
                         train == pair.throughTrain)
                         /* Return the stopped train. */
                         return pair.stoppedTrain;
@@ -310,7 +438,7 @@ namespace TransactionTime
                 else
                 {
                     /* Check the loop at the begining of the section. */
-                    if (Math.Abs(pair.loopLocation.loopEnd - section.sectionStart) < 0.00001 &&
+                    if (Math.Abs(pair.loopLocation.loopEnd - section.sectionStart) < 0.050001 &&
                             train == pair.throughTrain)
                         /* Return the stopped train. */
                         return pair.stoppedTrain;
@@ -340,12 +468,12 @@ namespace TransactionTime
             /* Loop through each train to find the next train in the section */
             foreach (Train train in trains)
             {
-                /* Include 1 km prior to the section to find any train approaching the section. */
+                /* Find the time the front of the train enterest the section. */
                 if (train.trainDirection == direction.IncreasingKm)
-                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart - 1 && t.kilometreage < section.sectionEnd &&
+                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
                         t.speed > 0 && t.dateTime > currentTime).ToList();
                 else
-                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd + 1 && 
+                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd && 
                         t.speed > 0 && t.dateTime > currentTime).ToList();
 
                 /* If there are points in the section journey, find the earliest time, greater than the current search time. */
@@ -399,7 +527,8 @@ namespace TransactionTime
                     end = journey[index - 1].kilometreage;
 
                     /* Create a loop location if its not too close to the end of the data. */
-                    // 30 km prior to the end of the interpolation to allw the through trains to be found.
+                    // 30 km prior to the end of the interpolation to allow the through trains to be found.
+                    /* This is somewhat of an arbitrary number based on Gunnedah basin trains. */
                     if (end < endInterpolationKm - 30)
                         loopLocations.Add(new LoopLocation(start, end));
 
@@ -431,13 +560,13 @@ namespace TransactionTime
                 if (!sectionFound && !journey[index].isLoopHere)
                 {
                     sectionFound = true;
-                    start = journey[index - 1].kilometreage;
+                    start = journey[index].kilometreage;
                 }
 
                 /* The beginning of the next loop is the end of the current section. */
                 if (sectionFound && journey[index].isLoopHere)
                 {
-                    end = journey[index].kilometreage;
+                    end = journey[index-1].kilometreage;
                     sectionFound = false;
 
                     if(start !=0 && end != 0)
@@ -581,6 +710,7 @@ namespace TransactionTime
                     /* If the current train pair stopped at the current loop, search for the through train. */
                     if (pair.loopLocation == loop)
                     {
+                        Train stopped = pair.stoppedTrain;
                         minDifference = double.MaxValue;
                         keepThrough = null;
 
@@ -595,7 +725,7 @@ namespace TransactionTime
                                 /* Calcualte the time difference of each train at the restart location. */
                                 double timeDifference = (pair.stoppedTrain.journey[idx].dateTime - throughTrain.journey[idx].dateTime).TotalMinutes;
 
-                                if (timeDifference > -1 && timeDifference < minDifference)
+                                if (timeDifference > -5 && timeDifference < minDifference) // timeDifference > -1
                                 {
                                     /* only keep the through train that is closest in time to the stopped train. */
                                     minDifference = timeDifference;
@@ -763,5 +893,7 @@ namespace TransactionTime
             return new List<double>(new double[] { timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop, distanceToTrackSpeed });
         }
 
+
+        
     }
 }
