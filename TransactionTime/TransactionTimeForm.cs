@@ -424,7 +424,7 @@ namespace TransactionTime
 
             string internalDirectory = @"S:\Corporate Strategy\Infrastructure Strategies\Simulations\Train Performance Analysis\Gunnedah Basin";
             /* Data File */
-            Settings.dataFile = internalDirectory + @"\Gunnedah Basin Data 2016-2017 PN+QR.txt"; //Gunnedah Basin Data 201701-201703 - all trains.txt";
+            Settings.dataFile = internalDirectory + @"\Gunnedah Basin Data 201701-201706 - all trains.txt"; //Gunnedah Basin Data 2016-2017 PN+QR.txt
             dataFilename.Text = Path.GetFileName(Settings.dataFile);
             dataFilename.ForeColor = SystemColors.ActiveCaptionText;
 
@@ -444,8 +444,8 @@ namespace TransactionTime
             destinationDirectory.ForeColor = SystemColors.ActiveCaptionText;
 
             /* Settings */
-            fromDate.Value = new DateTime(2017, 1, 2);  // 2017, 1, 1
-            toDate.Value = new DateTime(2017, 1, 3);    // 2017, 4, 1
+            fromDate.Value = new DateTime(2017, 1, 3);  // 2017, 1, 1
+            toDate.Value = new DateTime(2017, 1, 4);    // 2017, 4, 1
 
             startInterpolationKm.Text = "264";
             endInterpolationKm.Text = "541";
@@ -455,7 +455,7 @@ namespace TransactionTime
             dataSeparation.Text = "4";
             timeSeparation.Text = "10";
 
-            trainLengthKm.Text = "1.5";
+            trainLengthKm.Text = "1.3";         // train length is 1335 m
             trackSpeedPercent.Text = "90";
             maxDistanceToTrackSpeed.Text = "5";
 
