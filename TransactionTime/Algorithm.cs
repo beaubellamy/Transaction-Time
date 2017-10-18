@@ -50,7 +50,7 @@ namespace TransactionTime
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
             // Add when running Ulan Line data
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
             /* TRAP: Multiple if conditions */
             /* If further development is required to use different train types (ie, operators, by commodity, etc), 
@@ -423,12 +423,8 @@ namespace TransactionTime
             /* Loop through each train to find the next train in the section */
             foreach (Train train in trains)
             {
-                /* Find the time the front of the train enterest the section. */
-                if (train.trainDirection == direction.IncreasingKm)
-                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
-                        t.speed > 0 && t.dateTime > currentTime).ToList();
-                else
-                    sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd && 
+                /* Find the time the front of the train enters the section. */
+                sectionJourney = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd && 
                         t.speed > 0 && t.dateTime > currentTime).ToList();
 
                 /* If there are points in the section journey, find the earliest time, greater than the current search time. */
