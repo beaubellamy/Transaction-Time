@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransactionTimeFrom));
             this.TransactionTimeForm = new System.Windows.Forms.TabControl();
             this.fileTab = new System.Windows.Forms.TabPage();
             this.UlanLineParameters = new System.Windows.Forms.CheckBox();
@@ -552,6 +553,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(948, 380);
             this.Controls.Add(this.TransactionTimeForm);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "TransactionTimeFrom";
             this.Text = "Form1";
             this.TransactionTimeForm.ResumeLayout(false);

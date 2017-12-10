@@ -44,17 +44,25 @@ namespace TransactionTime
             List<trainOperator> operators = TrainRecords.Select(t => t.trainOperator).Distinct().ToList();
             operators.Remove(trainOperator.Unknown);
             int numberOfOperators = operators.Count();
-
+            
             /* Set simulation categories [TRAP:Set analysis categories] */
             List<Category> simCategories = new List<Category>();
+            //// Gunnedah Basin
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
+            //// Add when running Ulan Line data
+            ////simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
+            
+            // Southern Highlands
+            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.CityRail));
+            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Countrylink));
             simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
-            // Add when running Ulan Line data
-            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
+
             /* TRAP: Multiple if conditions */
             /* If further development is required to use different train types (ie, operators, by commodity, etc), 
              * the neccesasry code is in the TRAP tool. 
+             * Will need to define the operator and commodity categories on the Form.
              */
 
             /* Create the list of simulated trains. */
@@ -73,10 +81,10 @@ namespace TransactionTime
             trainList = Processing.CleanData(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
             
             /* Perform minor cleaning porocedures and create individual train journeys. */
-            List<Train> rawTrainList = new List<Train>();
-            rawTrainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
-            /* Write the raw data to file - usefull for creating train graphs */
-            FileOperations.writeRawTrainDataWithTime(rawTrainList, Settings.aggregatedDestination);
+            //List<Train> rawTrainList = new List<Train>();
+            //rawTrainList = Processing.MakeTrains(OrderdTrainRecords, trackGeometry, Settings.timethreshold, Settings.distanceThreshold, Settings.minimumJourneyDistance, Settings.analysisCategory);
+            ///* Write the raw data to file - usefull for creating train graphs */
+            //FileOperations.writeRawTrainDataWithTime(rawTrainList, Settings.aggregatedDestination);
 
             /* Interpolate data */
             /******** Should only be required while we are waiting for the data in the prefered format ********/
@@ -130,8 +138,8 @@ namespace TransactionTime
             stats[stats.Count() - 1].Category = "All loops";
 
             /* Write the train pairs to file grouped by loop location. */
-            FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
-            FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
+            //FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
+            //FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
 
             #endregion
                         
@@ -169,7 +177,7 @@ namespace TransactionTime
             foreach (Section section in sections)
             {
                 /* Find the first train that occupies the section. */
-                train = firstTrainInSection(utilisationTrains, section, currentTime);
+                train = findNextTrainInSection(utilisationTrains, section, currentTime);
                 currentTrainJourney = train.journey;
 
                 /* Reset the current time to the earliest time for this train, where it was still in the section. 
@@ -219,7 +227,7 @@ namespace TransactionTime
                             }
 
                             /* Find the next train in the section */
-                            train = firstTrainInSection(utilisationTrains, section, endTime);
+                            train = findNextTrainInSection(utilisationTrains, section, endTime);
                             
                             previousStartTime = currentTime;
 
@@ -303,7 +311,7 @@ namespace TransactionTime
                     }
 
                     /* Find the next train that occupies the section. */
-                    train = firstTrainInSection(utilisationTrains, section, endTime);
+                    train = findNextTrainInSection(utilisationTrains, section, endTime);
                     if (train != null)
                     {
                         currentTime = train.journey.Where(t => t.kilometreage > section.sectionStart && t.kilometreage < section.sectionEnd &&
@@ -410,7 +418,7 @@ namespace TransactionTime
         /// <param name="section">The current section being occupied.</param>
         /// <param name="currentTime">The time of day to search for the next train.</param>
         /// <returns>The next train in the section, or null if none exists.</returns>
-        public static Train firstTrainInSection(List<Train> trains, Section section, DateTime currentTime)
+        public static Train findNextTrainInSection(List<Train> trains, Section section, DateTime currentTime)
         {
             /* Define a sub journey list to define a trains journey inside the current section. */
             List<TrainJourney> sectionJourney = new List<TrainJourney>();
