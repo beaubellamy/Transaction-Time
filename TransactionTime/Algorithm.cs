@@ -138,8 +138,8 @@ namespace TransactionTime
             stats[stats.Count() - 1].Category = "All loops";
 
             /* Write the train pairs to file grouped by loop location. */
-            //FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
-            //FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
+            FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
+            FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
 
             #endregion
                         
@@ -305,7 +305,7 @@ namespace TransactionTime
                     }
                     else
                     {
-                        /* Adjsut the end time to find the next train after the train we are ignoring. */
+                        /* Adjust the end time to find the next train after the train we are ignoring. */
                         ignoreTrain = false;
                         endTime = currentTime.AddMinutes(5);
                     }
@@ -329,7 +329,7 @@ namespace TransactionTime
                 }
                 
                 /* Determine the utilisation in each section. */
-                rollingSectionUtilisation = calculateSectionUtilisation(occupationBlock);
+                rollingSectionUtilisation = calculate24HourSectionUtilisation(occupationBlock);
 
                 /* Build the key string for the dictionary. */
                 string key = string.Format("{0:0.00} km - {1:0.00} km", section.sectionStart, section.sectionEnd);
@@ -857,7 +857,7 @@ namespace TransactionTime
         /// </summary>
         /// <param name="occupationBlock">The blocks occupied by trains in the current section.</param>
         /// <returns>A list of 24 hourly occupation times.</returns>
-        private static List<double> calculateSectionUtilisation(List<OccupationBlock> occupationBlock)
+        private static List<double> calculate24HourSectionUtilisation(List<OccupationBlock> occupationBlock)
         {
             List<double> rollingUtilisation = new List<double>();
 
