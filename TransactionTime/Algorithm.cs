@@ -47,17 +47,36 @@ namespace TransactionTime
             
             /* Set simulation categories [TRAP:Set analysis categories] */
             List<Category> simCategories = new List<Category>();
+
+            if (Settings.PacificNational)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
+            if (Settings.Aurizon)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
+            if (Settings.Freightliner)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
+            if (Settings.CityRail)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.CityRail));
+            if (Settings.CountryLink)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Countrylink));
+            if (Settings.Qube)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.QUBE));
+            if (Settings.SCT)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.SCT));
+            if (Settings.Combined)
+                simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
+
+
             //// Gunnedah Basin
             //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
             //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Aurizon));
             //// Add when running Ulan Line data
             ////simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Freightliner));
             //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Combined));
-            
+
             // Southern Highlands
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.CityRail));
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Countrylink));
-            simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.CityRail));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.Countrylink));
+            //simCategories.Add(Processing.convertTrainOperatorToCategory(trainOperator.PacificNational));
 
             /* TRAP: Multiple if conditions */
             /* If further development is required to use different train types (ie, operators, by commodity, etc), 
@@ -882,6 +901,6 @@ namespace TransactionTime
 
         }
         
-                
+        
     }
 }

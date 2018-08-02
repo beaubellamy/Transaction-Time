@@ -21,7 +21,15 @@ namespace TransactionTime
         public static string aggregatedDestination = null;
         
         public static analysisCategory analysisCategory = analysisCategory.TrainOperator;
-        
+        public static bool PacificNational = false;
+        public static bool Freightliner = false;
+        public static bool Aurizon = false;
+        public static bool CityRail = false;
+        public static bool CountryLink = false;
+        public static bool Qube = false;
+        public static bool SCT = false;
+        public static bool Combined = false;
+
         public static DateTime[] dateRange = new DateTime[2];
 
         public static double startInterpolationKm;                  /* Start km for interpoaltion data. */

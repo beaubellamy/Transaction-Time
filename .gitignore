@@ -154,3 +154,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/.vs/TransactionTime/v15/Server/sqlite3
+/packages/MathNet.Numerics.3.19.0/lib
+/packages/MathNet.Numerics.3.19.0

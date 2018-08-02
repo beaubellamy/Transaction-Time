@@ -31,6 +31,15 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransactionTimeFrom));
             this.TransactionTimeForm = new System.Windows.Forms.TabControl();
             this.fileTab = new System.Windows.Forms.TabPage();
+            this.SCT = new System.Windows.Forms.CheckBox();
+            this.Qube = new System.Windows.Forms.CheckBox();
+            this.CountryLink = new System.Windows.Forms.CheckBox();
+            this.CityRail = new System.Windows.Forms.CheckBox();
+            this.CombineOperators = new System.Windows.Forms.CheckBox();
+            this.Freightliner = new System.Windows.Forms.CheckBox();
+            this.Aurizon = new System.Windows.Forms.CheckBox();
+            this.OperatorsLabel = new System.Windows.Forms.Label();
+            this.PacificNational = new System.Windows.Forms.CheckBox();
             this.UlanLineParameters = new System.Windows.Forms.CheckBox();
             this.GunnedahBasinParameters = new System.Windows.Forms.CheckBox();
             this.destinationDirectory = new System.Windows.Forms.TextBox();
@@ -93,6 +102,15 @@
             // 
             // fileTab
             // 
+            this.fileTab.Controls.Add(this.SCT);
+            this.fileTab.Controls.Add(this.Qube);
+            this.fileTab.Controls.Add(this.CountryLink);
+            this.fileTab.Controls.Add(this.CityRail);
+            this.fileTab.Controls.Add(this.CombineOperators);
+            this.fileTab.Controls.Add(this.Freightliner);
+            this.fileTab.Controls.Add(this.Aurizon);
+            this.fileTab.Controls.Add(this.OperatorsLabel);
+            this.fileTab.Controls.Add(this.PacificNational);
             this.fileTab.Controls.Add(this.UlanLineParameters);
             this.fileTab.Controls.Add(this.GunnedahBasinParameters);
             this.fileTab.Controls.Add(this.destinationDirectory);
@@ -110,6 +128,103 @@
             this.fileTab.TabIndex = 0;
             this.fileTab.Text = "Select Files";
             this.fileTab.UseVisualStyleBackColor = true;
+            // 
+            // SCT
+            // 
+            this.SCT.AutoSize = true;
+            this.SCT.Location = new System.Drawing.Point(141, 262);
+            this.SCT.Name = "SCT";
+            this.SCT.Size = new System.Drawing.Size(47, 17);
+            this.SCT.TabIndex = 24;
+            this.SCT.Text = "SCT";
+            this.SCT.UseVisualStyleBackColor = true;
+            this.SCT.Click += new System.EventHandler(this.SCT_Click);
+            // 
+            // Qube
+            // 
+            this.Qube.AutoSize = true;
+            this.Qube.Location = new System.Drawing.Point(15, 280);
+            this.Qube.Name = "Qube";
+            this.Qube.Size = new System.Drawing.Size(52, 17);
+            this.Qube.TabIndex = 23;
+            this.Qube.Text = "Qube";
+            this.Qube.UseVisualStyleBackColor = true;
+            this.Qube.Click += new System.EventHandler(this.Qube_Click);
+            // 
+            // CountryLink
+            // 
+            this.CountryLink.AutoSize = true;
+            this.CountryLink.Location = new System.Drawing.Point(141, 245);
+            this.CountryLink.Name = "CountryLink";
+            this.CountryLink.Size = new System.Drawing.Size(85, 17);
+            this.CountryLink.TabIndex = 22;
+            this.CountryLink.Text = "Country Link";
+            this.CountryLink.UseVisualStyleBackColor = true;
+            this.CountryLink.Click += new System.EventHandler(this.CountryLink_Click);
+            // 
+            // CityRail
+            // 
+            this.CityRail.AutoSize = true;
+            this.CityRail.Location = new System.Drawing.Point(141, 228);
+            this.CityRail.Name = "CityRail";
+            this.CityRail.Size = new System.Drawing.Size(64, 17);
+            this.CityRail.TabIndex = 21;
+            this.CityRail.Text = "City Rail";
+            this.CityRail.UseVisualStyleBackColor = true;
+            this.CityRail.Click += new System.EventHandler(this.CityRail_Click);
+            // 
+            // CombineOperators
+            // 
+            this.CombineOperators.AutoSize = true;
+            this.CombineOperators.Location = new System.Drawing.Point(251, 245);
+            this.CombineOperators.Name = "CombineOperators";
+            this.CombineOperators.Size = new System.Drawing.Size(113, 17);
+            this.CombineOperators.TabIndex = 20;
+            this.CombineOperators.Text = "Combine Operatos";
+            this.CombineOperators.UseVisualStyleBackColor = true;
+            this.CombineOperators.Click += new System.EventHandler(this.Combined_Click);
+            // 
+            // Freightliner
+            // 
+            this.Freightliner.AutoSize = true;
+            this.Freightliner.Location = new System.Drawing.Point(15, 262);
+            this.Freightliner.Name = "Freightliner";
+            this.Freightliner.Size = new System.Drawing.Size(77, 17);
+            this.Freightliner.TabIndex = 19;
+            this.Freightliner.Text = "Freightliner";
+            this.Freightliner.UseVisualStyleBackColor = true;
+            this.Freightliner.Click += new System.EventHandler(this.FreightLiner_Click);
+            // 
+            // Aurizon
+            // 
+            this.Aurizon.AutoSize = true;
+            this.Aurizon.Location = new System.Drawing.Point(15, 245);
+            this.Aurizon.Name = "Aurizon";
+            this.Aurizon.Size = new System.Drawing.Size(61, 17);
+            this.Aurizon.TabIndex = 18;
+            this.Aurizon.Text = "Aurizon";
+            this.Aurizon.UseVisualStyleBackColor = true;
+            this.Aurizon.Click += new System.EventHandler(this.Aurizon_Click);
+            // 
+            // OperatorsLabel
+            // 
+            this.OperatorsLabel.AutoSize = true;
+            this.OperatorsLabel.Location = new System.Drawing.Point(12, 212);
+            this.OperatorsLabel.Name = "OperatorsLabel";
+            this.OperatorsLabel.Size = new System.Drawing.Size(91, 13);
+            this.OperatorsLabel.TabIndex = 17;
+            this.OperatorsLabel.Text = "Include Operators";
+            // 
+            // PacificNational
+            // 
+            this.PacificNational.AutoSize = true;
+            this.PacificNational.Location = new System.Drawing.Point(15, 228);
+            this.PacificNational.Name = "PacificNational";
+            this.PacificNational.Size = new System.Drawing.Size(100, 17);
+            this.PacificNational.TabIndex = 16;
+            this.PacificNational.Text = "Pacific National";
+            this.PacificNational.UseVisualStyleBackColor = true;
+            this.PacificNational.Click += new System.EventHandler(this.PacificNational_Click);
             // 
             // UlanLineParameters
             // 
@@ -273,7 +388,7 @@
             // 
             // throughTrainTime
             // 
-            this.throughTrainTime.Location = new System.Drawing.Point(646, 181);
+            this.throughTrainTime.Location = new System.Drawing.Point(272, 269);
             this.throughTrainTime.Name = "throughTrainTime";
             this.throughTrainTime.Size = new System.Drawing.Size(100, 20);
             this.throughTrainTime.TabIndex = 87;
@@ -282,11 +397,11 @@
             // throughTrainTimeLabel
             // 
             this.throughTrainTimeLabel.AutoSize = true;
-            this.throughTrainTimeLabel.Location = new System.Drawing.Point(463, 184);
+            this.throughTrainTimeLabel.Location = new System.Drawing.Point(16, 272);
             this.throughTrainTimeLabel.Name = "throughTrainTimeLabel";
             this.throughTrainTimeLabel.Size = new System.Drawing.Size(179, 13);
             this.throughTrainTimeLabel.TabIndex = 86;
-            this.throughTrainTimeLabel.Text = "Through Train Time Seperation (min)";
+            this.throughTrainTimeLabel.Text = "Through Train Time Separation (min)";
             // 
             // ProcessButton
             // 
@@ -300,7 +415,7 @@
             // 
             // transactionTimeOutlier
             // 
-            this.transactionTimeOutlier.Location = new System.Drawing.Point(272, 269);
+            this.transactionTimeOutlier.Location = new System.Drawing.Point(646, 181);
             this.transactionTimeOutlier.Name = "transactionTimeOutlier";
             this.transactionTimeOutlier.Size = new System.Drawing.Size(100, 20);
             this.transactionTimeOutlier.TabIndex = 83;
@@ -343,7 +458,7 @@
             // transactionTimeLabel
             // 
             this.transactionTimeLabel.AutoSize = true;
-            this.transactionTimeLabel.Location = new System.Drawing.Point(16, 272);
+            this.transactionTimeLabel.Location = new System.Drawing.Point(463, 184);
             this.transactionTimeLabel.Name = "transactionTimeLabel";
             this.transactionTimeLabel.Size = new System.Drawing.Size(161, 13);
             this.transactionTimeLabel.TabIndex = 78;
@@ -426,9 +541,9 @@
             this.trackSpeedLabel.AutoSize = true;
             this.trackSpeedLabel.Location = new System.Drawing.Point(463, 132);
             this.trackSpeedLabel.Name = "trackSpeedLabel";
-            this.trackSpeedLabel.Size = new System.Drawing.Size(131, 13);
+            this.trackSpeedLabel.Size = new System.Drawing.Size(119, 13);
             this.trackSpeedLabel.TabIndex = 68;
-            this.trackSpeedLabel.Text = "Factor of Track Speed (%)";
+            this.trackSpeedLabel.Text = "Track Speed Factor (%)";
             // 
             // maxTrackSpeedDistance
             // 
@@ -614,6 +729,14 @@
         private System.Windows.Forms.Label ExecitionTimeLabel;
         private System.Windows.Forms.CheckBox GunnedahBasinParameters;
         private System.Windows.Forms.CheckBox UlanLineParameters;
-
+        private System.Windows.Forms.CheckBox SCT;
+        private System.Windows.Forms.CheckBox Qube;
+        private System.Windows.Forms.CheckBox CountryLink;
+        private System.Windows.Forms.CheckBox CityRail;
+        private System.Windows.Forms.CheckBox CombineOperators;
+        private System.Windows.Forms.CheckBox Freightliner;
+        private System.Windows.Forms.CheckBox Aurizon;
+        private System.Windows.Forms.Label OperatorsLabel;
+        private System.Windows.Forms.CheckBox PacificNational;
     }
 }

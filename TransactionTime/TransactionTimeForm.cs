@@ -421,6 +421,7 @@ namespace TransactionTime
         private void setGunnedahBasinParameters()
         {
             resetDefaultParameters();
+            GunnedahBasinParameters.Checked = true;
 
             string internalDirectory = @"S:\Corporate Strategy\Infrastructure Strategies\Simulations\Train Performance Analysis\Gunnedah Basin";
             /* Data File */
@@ -465,7 +466,13 @@ namespace TransactionTime
 
             transactionTimeOutlier.Text = "10";
 
-            Settings.analysisCategory = analysisCategory.Unknown;
+            Settings.analysisCategory = analysisCategory.TrainOperator;
+            PacificNational.Checked = true;
+            Settings.PacificNational = true;
+            Aurizon.Checked = true;
+            Settings.Aurizon = true;
+            CombineOperators.Checked = true;
+            Settings.Combined = true;
 
         }
 
@@ -475,6 +482,7 @@ namespace TransactionTime
         private void setUlanLineParameters()
         {
             resetDefaultParameters();
+            UlanLineParameters.Checked = true;
 
             string internalDirectory = @"S:\Corporate Strategy\Infrastructure Strategies\Simulations\Train Performance Analysis\Ulan";
             /* Data File */
@@ -519,10 +527,19 @@ namespace TransactionTime
 
             transactionTimeOutlier.Text = "10";
 
-            Settings.analysisCategory = analysisCategory.Unknown;
+            Settings.analysisCategory = analysisCategory.TrainOperator;
+            PacificNational.Checked = true;
+            Settings.PacificNational = true;
+            Freightliner.Checked = true;
+            Settings.Freightliner = true;
+            Aurizon.Checked = true;
+            Settings.Aurizon = true;
+            CombineOperators.Checked = true;
+            Settings.Combined = true;
+
 
         }
-        
+
         /// <summary>
         /// Function determines if the testing parameters for the Gunnedah basin
         /// need to be set, or resets the default settings.
@@ -601,12 +618,123 @@ namespace TransactionTime
             
             transactionTimeOutlier.Text = "10";
 
+            
             Settings.analysisCategory = analysisCategory.Unknown;
+            Settings.PacificNational = false;
+            Settings.Aurizon = false;
+            Settings.Freightliner = false;
+            Settings.CityRail = false;
+            Settings.CountryLink = false;
+            Settings.Qube = false;
+            Settings.SCT = false;
+            Settings.Combined = false;
 
-           
+            PacificNational.Checked = false;
+            Aurizon.Checked = false;
+            Freightliner.Checked = false;
+            CityRail.Checked = false;
+            CountryLink.Checked = false;
+            Qube.Checked = false;
+            SCT.Checked = false;
+            CombineOperators.Checked = false;
+
+
 
         }
+
+        private void PacificNational_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// This sets the Pacific National Operator to the appropriate value in order 
+        /// to dynamically include Pacific National trains in teh analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void PacificNational_Click(object sender, EventArgs e)
+        {
+            Settings.PacificNational = PacificNational.Checked;
+        }
+
+        /// <summary>
+        /// This sets the Freightliner Operator to the appropriate value in order 
+        /// to dynamically include Freightliner trains in teh analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void FreightLiner_Click(object sender, EventArgs e)
+        {
+            Settings.Freightliner = Freightliner.Checked;
+        }
+
+        /// <summary>
+        /// This sets the Aurizon Operator to the appropriate value in order 
+        /// to dynamically include Aurizon trains in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void Aurizon_Click(object sender, EventArgs e)
+        {
+            Settings.Aurizon = Aurizon.Checked;
+        }
+
+        /// <summary>
+        /// This sets the City Rail Operator to the appropriate value in order 
+        /// to dynamically include City Rail trains in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void CityRail_Click(object sender, EventArgs e)
+        {
+            Settings.CityRail = CityRail.Checked;
+        }
+
+        /// <summary>
+        /// This sets the Country Link Operator to the appropriate value in order 
+        /// to dynamically include  Country Link trains in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void CountryLink_Click(object sender, EventArgs e)
+        {
+            Settings.CountryLink = CountryLink.Checked;
+        }
+
+        /// <summary>
+        /// This sets the Spare Operator to the appropriate value in order 
+        /// to dynamically include Spare trains in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void Qube_Click(object sender, EventArgs e)
+        {
+            Settings.Qube = Qube.Checked;
+        }
         
+        /// <summary>
+        /// This sets the Spare Operator to the appropriate value in order 
+        /// to dynamically include Spare trains in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void SCT_Click(object sender, EventArgs e)
+        {
+            Settings.SCT = SCT.Checked;
+        }
+
+        /// <summary>
+        /// This sets the Combined Operator to the appropriate value in order 
+        /// to dynamically include acombination of train operators in the analysis.
+        /// </summary>
+        /// <param name="sender">The object container.</param>
+        /// <param name="e">The event arguments.</param>
+        private void Combined_Click(object sender, EventArgs e)
+        {
+            Settings.Combined = CombineOperators.Checked;
+        }
+
     }
     
 }
