@@ -13,7 +13,7 @@ using Statistics;
 namespace TransactionTime
 {
     class Algorithm
-    {
+    { 
         /* The minimum gap in time between points to indicate a large gap when a train is restarting. */
         private static double fineTuneTimeGap_sec = 30;
 
@@ -32,8 +32,9 @@ namespace TransactionTime
 
             /* Read the data. */
             List<TrainRecord> TrainRecords = new List<TrainRecord>();
-            TrainRecords = FileOperations.readICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
-            /* When using Gunnedah Basin Data 2016-2017 PN+QR2.txt use the readICEData2() function. */
+            //TrainRecords = FileOperations.readICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
+            TrainRecords = FileOperations.readAzureExtractICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
+            
 
 
             if (TrainRecords.Count() == 0)
@@ -158,7 +159,7 @@ namespace TransactionTime
 
             /* Write the train pairs to file grouped by loop location. */
             FileOperations.writeTrainPairs(trainPairs, loopLocations, Settings.aggregatedDestination);
-            FileOperations.wrtieTrainPairStatistics(stats, Settings.aggregatedDestination);
+            FileOperations.writeTrainPairStatistics(stats, Settings.aggregatedDestination);
 
             #endregion
                         

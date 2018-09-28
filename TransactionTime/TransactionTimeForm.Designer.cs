@@ -178,9 +178,9 @@
             this.CombineOperators.AutoSize = true;
             this.CombineOperators.Location = new System.Drawing.Point(251, 245);
             this.CombineOperators.Name = "CombineOperators";
-            this.CombineOperators.Size = new System.Drawing.Size(113, 17);
+            this.CombineOperators.Size = new System.Drawing.Size(116, 17);
             this.CombineOperators.TabIndex = 20;
-            this.CombineOperators.Text = "Combine Operatos";
+            this.CombineOperators.Text = "Combine Operators";
             this.CombineOperators.UseVisualStyleBackColor = true;
             this.CombineOperators.Click += new System.EventHandler(this.Combined_Click);
             // 
