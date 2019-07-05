@@ -435,7 +435,7 @@ namespace TransactionTime
             geometryFilename.ForeColor = SystemColors.ActiveCaptionText;
 
             /* Simulation files */
-            Settings.actualAveragePerformanceFile = internalDirectory + @"\Gunnedah Actual Average Trains.csv"; //PacificNational-Increasing.csv";
+            Settings.actualAveragePerformanceFile = internalDirectory + @"\AverageSpeed Jan2019.csv"; //PacificNational-Increasing.csv";
             actualAveragePerformanceFile.Text = Path.GetFileName(Settings.actualAveragePerformanceFile);
             actualAveragePerformanceFile.ForeColor = SystemColors.ActiveCaptionText;
             
@@ -445,11 +445,11 @@ namespace TransactionTime
             destinationDirectory.ForeColor = SystemColors.ActiveCaptionText;
 
             /* Settings */
-            fromDate.Value = new DateTime(2017, 1, 3);  // 2017, 1, 1
-            toDate.Value = new DateTime(2017, 1, 4);    // 2017, 4, 1
+            fromDate.Value = new DateTime(2019, 1, 1);  // 2017, 1, 1
+            toDate.Value = new DateTime(2019, 2, 1);    // 2017, 4, 1
 
-            startInterpolationKm.Text = "264";
-            endInterpolationKm.Text = "541";
+            startInterpolationKm.Text = "280";
+            endInterpolationKm.Text = "540";
             interpolationInterval.Text = "50";
 
             minimumJourneyDistance.Text = "20"; // 250

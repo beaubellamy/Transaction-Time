@@ -33,8 +33,9 @@ namespace TransactionTime
             /* Read the data. */
             List<TrainRecord> TrainRecords = new List<TrainRecord>();
             //TrainRecords = FileOperations.readICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
-            TrainRecords = FileOperations.readAzureExtractICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
-            
+            //TrainRecords = FileOperations.readAzureExtractICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
+            TrainRecords = FileOperations.readAzureICEData(Settings.dataFile, excludeTrainList, Settings.excludeListOfTrains, Settings.dateRange);
+
 
 
             if (TrainRecords.Count() == 0)
@@ -738,11 +739,9 @@ namespace TransactionTime
             double timeToReachTrackSpeed, simulatedTrainTime, timeToClearLoop;
             double transactionTime = 0;
             double distanceToTrackSpeed = 0;
-
             /* Cycle through each train pair. */
             foreach (TrainPair pair in trainPairs)
             {
-                
                 timeToReachTrackSpeed = 0;
                 simulatedTrainTime = 0;
                 timeToClearLoop = 0;
